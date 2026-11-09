@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>외형 도감 · 클래스별 등급 형상 — 혈월의 사냥꾼</title>
+<meta name="theme-color" content="#070304">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--txt:#efe4d6;--mut:#9a8a80;--serif:'Noto Serif KR',serif;--cin:'Cinzel',serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070304;color:var(--txt);font-family:Pretendard,sans-serif;min-height:100vh}
+body::before{content:"";position:fixed;inset:-5%;background:url(map2.webp) center/cover;filter:brightness(.16) blur(3px);z-index:-2}
+body::after{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 30%,transparent 20%,#000 85%);z-index:-1}
+.wrap{width:min(1360px,95%);margin:0 auto;padding:48px 0 70px}
+header{text-align:center}
+header .o{font:700 .78rem var(--cin);letter-spacing:.6em;color:#cfa86a}
+header h1{font:900 clamp(1.9rem,4.6vw,3.2rem) var(--serif);letter-spacing:.1em;margin:8px 0;background:linear-gradient(180deg,#fff 20%,#ff6b7a 70%,#8a0a1c);-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{color:var(--mut)}
+.bar{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:28px 0 10px}
+.bar button{padding:10px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(10,4,6,.7);color:var(--mut);font:700 .9rem var(--serif);cursor:pointer;transition:all .2s}
+.bar button.on{color:#fff;border-color:var(--c,#cfa86a);box-shadow:0 0 16px color-mix(in srgb,var(--c,#cfa86a) 45%,transparent);background:color-mix(in srgb,var(--c,#cfa86a) 14%,rgba(10,4,6,.8))}
+.bar small{font:700 .66rem var(--cin);letter-spacing:.12em;margin-left:6px;opacity:.7}
+.desc{text-align:center;color:var(--mut);font-size:.88rem;margin:6px 0 26px;min-height:1.4em}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.card{--c:#9aa0a6;border-radius:16px;padding:2px;background:var(--c);position:relative;transition:transform .3s}
+.card:hover{transform:translateY(-6px)}
+.card .in{border-radius:14px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,color-mix(in srgb,var(--c) 32%,#140709),#080304 72%);aspect-ratio:3/4.4;display:flex;flex-direction:column;position:relative}
+.card img{position:absolute;inset:4% -6% 18%;width:112%;height:78%;object-fit:contain;filter:drop-shadow(0 10px 20px rgba(0,0,0,.8));transition:transform .4s}
+.card:hover img{transform:scale(1.05)}
+.card .top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;padding:10px 12px}
+.card .badge{font:900 .72rem var(--serif);padding:3px 10px;border-radius:999px;border:1px solid var(--c);background:color-mix(in srgb,var(--c) 22%,rgba(0,0,0,.6))}
+.card .st{color:var(--c);font-size:.7rem;letter-spacing:1px}
+.card .bot{position:relative;z-index:2;margin-top:auto;padding:10px 12px 12px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.88) 35%)}
+.card .bot b{display:block;font:900 .95rem var(--serif)}
+.card .bot small{font-size:.7rem;color:var(--mut)}
+.g2{--c:#4fd17a}.g3{--c:#4aa8ff;box-shadow:0 0 22px rgba(74,168,255,.3)}.g4{--c:#b46bff;box-shadow:0 0 28px rgba(180,107,255,.4)}
+.g5{--c:#ffb340;background:linear-gradient(135deg,#ffe29a,#ff9a1f 30%,#7a4a10 50%,#ffcf6a 70%,#ff8a00);background-size:300% 300%;animation:gold 4s ease infinite;box-shadow:0 0 36px rgba(255,170,60,.45)}
+@keyframes gold{50%{background-position:100% 100%}}
+.g6{--c:#ff3b52;background:conic-gradient(from var(--a,0deg),#ff1f3d,#ffd36a,#ff1f3d,#7a0018,#ff1f3d);animation:spin 4s linear infinite;box-shadow:0 0 46px rgba(255,30,60,.55)}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes spin{to{--a:360deg}}
+.g5 .in::after,.g6 .in::after{content:"";position:absolute;inset:0;z-index:3;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.2) 50%,transparent 65%);transform:translateX(-120%);animation:sweep 3.6s ease-in-out infinite;pointer-events:none}
+@keyframes sweep{60%,100%{transform:translateX(120%)}}
+.play{display:block;width:max-content;margin:30px auto 0;padding:12px 26px;border-radius:999px;border:1px solid #ff5468;background:linear-gradient(180deg,#8a1424,#4a0610);color:#fff;font:700 .95rem var(--serif);letter-spacing:.1em;text-decoration:none;box-shadow:0 0 20px rgba(255,40,60,.45)}
+.all{margin-top:56px}
+.all h2{font:900 1.2rem var(--serif);margin-bottom:14px;text-align:center}
+.mat{display:grid;grid-template-columns:120px repeat(6,1fr);gap:6px;align-items:center}
+.mat .h{font:700 .74rem var(--serif);text-align:center;padding:6px 0}
+.mat .rl{font:700 .82rem var(--serif);text-align:right;padding-right:8px}
+.mat .c{aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,255,255,.08);background:radial-gradient(circle,var(--bg,#222) 0%,#0a0405 70%);overflow:hidden;cursor:pointer}
+.mat .c img{width:100%;height:100%;object-fit:contain}
+.back{display:block;text-align:center;margin-top:30px;color:#cfa86a;font:700 .85rem var(--serif);letter-spacing:.2em;text-decoration:none}
+@media(max-width:1000px){.grid{grid-template-columns:repeat(3,1fr)}.mat{grid-template-columns:70px repeat(6,1fr)}}
+@media(max-width:560px){.grid{grid-template-columns:repeat(2,1fr)}.mat .rl{font-size:.62rem}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="o">APPEARANCE CODEX</div><h1>외형 도감</h1><p>4개 클래스 × 남·여 × 6등급 · 등급이 오를수록 형상이 진화합니다</p></header>
+  <div class="bar" id="cls"></div>
+  <div class="bar" id="sex"></div>
+  <div class="desc" id="desc"></div>
+  <div class="grid" id="grid"></div>
+  <a class="play" id="play" href="./">이 외형으로 사냥하기 →</a>
+  <div class="all"><h2>전체 형상 한눈에 보기</h2><div class="mat" id="mat"></div></div>
+  <a class="back" href="./">← 게임으로 돌아가기</a>
+</div>
+<script>
+const CL=[{id:'blood',n:'블러드스테인',e:'BLOODSTAINED',c:'#ff3b52',d:'피로 벼린 대검을 휘두르는 근접 광전사'},{id:'akasha',n:'아카샤',e:'AKASHA',c:'#ff4c86',d:'칼날 톤파로 표적을 끝까지 쫓는 추격 학살자'},{id:'carnage',n:'카니지',e:'CARNAGE',c:'#ffbe5a',d:'축복받은 피의 총탄으로 어둠을 꿰뚫는 저격수'},{id:'viper',n:'바이퍼',e:'VIPER',c:'#aa5aff',d:'저주의 오브로 독과 망령을 부리는 흑마법사'}];
+const GR=[null,{n:'일반',e:'COMMON',c:'#9aa0a6'},{n:'고급',e:'UNCOMMON',c:'#4fd17a'},{n:'희귀',e:'RARE',c:'#4aa8ff'},{n:'영웅',e:'EPIC',c:'#b46bff'},{n:'전설',e:'LEGENDARY',c:'#ffb340'},{n:'신화',e:'MYTHIC',c:'#ff3b52'}];
+const GD=['','낡은 가죽과 사슬 · 마력 없음','초록 장식의 정예 장비','푸른 룬이 새겨진 강철','보랏빛 영혼 불꽃','황금 문양과 빛의 오라','혈월 후광 · 피의 날개'];
+const FB={blood:'td-hero',akasha:'td-akasha',carnage:'td-carnage',viper:'td-viper'};
+const q=new URLSearchParams(location.search);let cls=q.get('cls')||'blood',sex=q.get('sex')==='f'?'f':'m';
+const $=s=>document.querySelector(s);
+function render(){const C=CL.find(c=>c.id===cls);
+ $('#cls').innerHTML=CL.map(c=>`<button data-c="${c.id}" class="${c.id===cls?'on':''}" style="--c:${c.c}">${c.n}<small>${c.e}</small></button>`).join('');
+ $('#sex').innerHTML=['m','f'].map(s=>`<button data-s="${s}" class="${s===sex?'on':''}">${s==='m'?'♂ 남성':'♀ 여성'}</button>`).join('');
+ $('#desc').textContent=C.d;
+ $('#grid').innerHTML=[1,2,3,4,5,6].map(g=>`<a class="card g${g}" href="./?cls=${cls}&sex=${sex}&grade=${g}" style="text-decoration:none;color:inherit"><div class="in"><div class="top"><span class="badge">${GR[g].n}</span><span class="st">${'★'.repeat(g)}</span></div><img src="ap-${cls}-${sex}-${g}.webp" onerror="this.src='${FB[cls]}.webp'" alt=""><div class="bot"><b>${GR[g].n} ${C.n}</b><small>${GD[g]}</small></div></div></a>`).join('');
+ $('#play').href=`./?cls=${cls}&sex=${sex}`;
+ $('#mat').innerHTML='<div></div>'+[1,2,3,4,5,6].map(g=>`<div class="h" style="color:${GR[g].c}">${GR[g].n}</div>`).join('')+CL.flatMap(c=>['m','f'].map(s=>`<div class="rl" style="color:${c.c}">${c.n} ${s==='m'?'♂':'♀'}</div>`+[1,2,3,4,5,6].map(g=>`<div class="c" style="--bg:${GR[g].c}33" data-c="${c.id}" data-s="${s}"><img loading="lazy" src="ap-${c.id}-${s}-${g}.webp" onerror="this.src='${FB[c.id]}.webp'" alt=""></div>`).join(''))).join('');
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-c],[data-s]');if(!b)return;if(b.dataset.c)cls=b.dataset.c;if(b.dataset.s)sex=b.dataset.s;render();if(b.classList.contains('c'))scrollTo({top:0,behavior:'smooth'})});
+render();
+</script>
+</body>
+</html>

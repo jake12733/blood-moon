@@ -286,7 +286,10 @@ const CLASSES=[
  {id:'akasha',name:'아카샤',en:'AKASHA',img:'akasha',file:'td-akasha',h:150,range:300,iv:.55,col:'255,60,110',hue:-25,desc:'칼날 톤파 · 추격 학살자',combo:'혈속 돌진 → 4연타 난무 → 올려치기 (적 공중 띄움)'},
  {id:'carnage',name:'카니지',en:'CARNAGE',img:'carnage',file:'td-carnage',h:150,range:340,iv:.42,col:'255,190,90',hue:5,desc:'총기 · 원거리 속사',combo:'속사 → 6발째 관통 저격 · 근접 시 후퇴 사격'},
  {id:'viper',name:'바이퍼',en:'VIPER',img:'viper',file:'td-viper',h:158,range:310,iv:1,col:'170,90,255',hue:230,desc:'저주의 오브 · 독과 저주',combo:'저주 혼령탄 → 독구름 → 3번째마다 피의 회오리'}];
-const CH=()=>{const c=CLASSES.find(x=>x.id===S.cls)||CLASSES[0],gr=clamp(S.grade||1,1,6);return{...c,g:gr,mul:GMUL[gr],moon:gr===6,fly:false}};
+const HSC=[1,1,1,1.04,1.1,1.16,1.3];
+const apKey=(id,sx,gr)=>`ap-${id}-${sx}-${gr}`;
+function getImg(key,fb){if(IMG[key])return IMG[key];const i=new Image();i.onerror=()=>{if(fb&&i.src.indexOf(fb)<0)i.src=fb+'.webp'};i.src=key+'.webp';IMG[key]=i;return i}
+const CH=()=>{const c=CLASSES.find(x=>x.id===S.cls)||CLASSES[0],gr=clamp(S.grade||1,1,6),sx=S.sex==='f'?'f':'m',key=apKey(c.id,sx,gr);getImg(key,c.file);return{...c,g:gr,sex:sx,img:key,file:key,fb:c.file,h:Math.round(c.h*HSC[gr]),mul:GMUL[gr],moon:gr===6,fly:false}};
 const QUESTS=[
  {t:'몬스터 15마리 처치',f:()=>S.totalKills,n:15,m:6},
  {t:'혈검 연마 Lv.5 달성',f:()=>L('atk'),n:5,m:8},
@@ -302,7 +305,7 @@ const QUESTS=[
  {t:'첫 환생 (피의 계약)',f:()=>S.rebirths,n:1,m:80}];
 
 /* ========== 상태 ========== */
-const DEF={gold:0,soul:0,stage:1,kills:0,maxStage:1,up:{},fam:{},cds:{},auto:true,lowfx:false,saved:Date.now(),rebirths:0,totalKills:0,q:0,casts:0,char:'hunter',cls:'blood',grade:1};
+const DEF={gold:0,soul:0,stage:1,kills:0,maxStage:1,up:{},fam:{},cds:{},auto:true,lowfx:false,saved:Date.now(),rebirths:0,totalKills:0,q:0,casts:0,char:'hunter',cls:'blood',grade:1,sex:'m'};
 let S=load();
 function load(){try{const d=JSON.parse(localStorage.getItem('bloodmoon-save'));if(d)return{...DEF,...d,up:{...d.up},fam:{...d.fam},cds:{}}}catch(e){}return structuredClone(DEF)}
 function save(){S.saved=Date.now();localStorage.setItem('bloodmoon-save',JSON.stringify(S))}
@@ -470,7 +473,10 @@ function renderList(soft){const el=$('#list');
   el.dataset.tab=tab;
   el.innerHTML=`<div class="mult">${[1,10,50,'max'].map(m=>`<button data-mult="${m}" class="${mult===m?'on':''}">${m==='max'?'최대':'×'+m}</button>`).join('')}</div>`+arr.map(it=>{const l=store[it.id]||0;return`<div class="row"><div class="ri">${svg(it.icon)}</div><div class="rt"><b>${it.name}<em>Lv.${l}</em></b><small>${tab==='up'?it.desc(l):`${it.desc} · 초당 피해 ${fmt(it.dps*Math.max(1,l)*(1+Math.floor(l/25)*.5)*dmgMul())}${l?'':' (소환 시)'}`}</small></div><button class="buy" data-buy="${it.id}"></button></div>`}).join('');renderList(true)}
  else if(tab==='char'){el.dataset.tab=tab;const C=CH();
-  el.innerHTML='<div class="mult" style="color:var(--mut);font-size:.74rem;align-items:center;flex-wrap:wrap">체험 모드 · 등급 '+[1,2,3,4,5,6].map(k=>`<button data-grade="${k}" class="${C.g===k?'on':''}" style="color:${GR[k].c};${C.g===k?'border-color:'+GR[k].c:''}">${GR[k].n}</button>`).join('')+`<span style="margin-left:6px">피해 ×${GMUL[C.g]}</span><a href="characters.html" style="color:var(--gold);margin-left:auto">도감 →</a></div>`+CLASSES.map(c=>{const on=C.id===c.id,col=`rgb(${c.col})`;return`<div class="row" style="border-color:${on?col:'rgba(255,255,255,.07)'};${on?'box-shadow:0 0 16px rgba('+c.col+',.35)':''}"><div class="ri" style="padding:0;overflow:hidden;border-color:${col};background:radial-gradient(circle,rgba(${c.col},.25),#120608);width:52px;height:52px"><img src="${c.file}.webp" style="width:100%;height:100%;object-fit:cover;object-position:50% 15%"></div><div class="rt"><b style="color:${col}">${c.name}<em>${c.en}</em></b><small>${c.desc}<br>${c.combo}</small></div><button class="buy" data-cls="${c.id}" ${on?'disabled':''}>${on?'사용 중':'선택'}</button></div>`}).join('')}
+  const sxBtn=s=>`<button data-sex="${s}" class="${C.sex===s?'on':''}">${s==='m'?'♂ 남':'♀ 여'}</button>`;
+  el.innerHTML='<div class="mult" style="color:var(--mut);font-size:.74rem;align-items:center;flex-wrap:wrap;gap:6px">성별 '+sxBtn('m')+sxBtn('f')+'<span style="width:10px"></span>등급 '+[1,2,3,4,5,6].map(k=>`<button data-grade="${k}" class="${C.g===k?'on':''}" style="color:${GR[k].c};${C.g===k?'border-color:'+GR[k].c:''}">${GR[k].n}</button>`).join('')+`<span style="margin-left:6px">피해 ×${GMUL[C.g]}</span><a href="appearance.html" style="color:var(--gold);margin-left:auto">외형 도감 →</a></div>`
+  +`<div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(6,1fr);gap:8px">`+[1,2,3,4,5,6].map(k=>{const on=C.g===k;return`<button data-grade="${k}" style="position:relative;aspect-ratio:1;border-radius:10px;border:1px solid ${on?GR[k].c:'rgba(255,255,255,.08)'};background:radial-gradient(circle at 50% 40%,${GR[k].c}40,#0c0406 70%);overflow:hidden;padding:0;${on?'box-shadow:0 0 14px '+GR[k].c+'88':''}"><img src="${apKey(C.id,C.sex,k)}.webp" onerror="this.src='${C.fb}.webp'" style="width:100%;height:100%;object-fit:contain"><span style="position:absolute;left:0;right:0;bottom:0;font:700 .62rem Pretendard;background:rgba(0,0,0,.65);color:${GR[k].c};padding:2px 0">${GR[k].n}</span></button>`}).join('')+'</div>'
+  +CLASSES.map(c=>{const on=C.id===c.id,col=`rgb(${c.col})`,key=apKey(c.id,C.sex,C.g);return`<div class="row" style="border-color:${on?col:'rgba(255,255,255,.07)'};${on?'box-shadow:0 0 16px rgba('+c.col+',.35)':''}"><div class="ri" style="padding:0;overflow:hidden;border-color:${col};background:radial-gradient(circle,rgba(${c.col},.25),#120608);width:52px;height:52px"><img src="${key}.webp" onerror="this.src='${c.file}.webp'" style="width:100%;height:100%;object-fit:cover;object-position:50% 15%"></div><div class="rt"><b style="color:${col}">${c.name}<em>${c.en}</em></b><small>${c.desc}<br>${c.combo}</small></div><button class="buy" data-cls="${c.id}" ${on?'disabled':''}>${on?'사용 중':'선택'}</button></div>`}).join('')}
  else if(tab==='skill'){el.dataset.tab=tab;el.innerHTML=SKILLS.map(sk=>`<div class="row"><div class="ri">${svg(sk.icon)}</div><div class="rt"><b>${sk.name}<em>재사용 ${sk.cd}초</em></b><small>${sk.desc}${S.maxStage<sk.unlock?` · ${sk.unlock}단계 도달 시 해금`:''}</small></div><button class="buy" data-use="${sk.id}" ${S.maxStage<sk.unlock?'disabled':''}>시전</button></div>`).join('')+`<div class="row"><div class="ri">${svg('moon')}</div><div class="rt"><b>자동 시전</b><small>재사용 대기가 끝나면 혈술을 자동으로 사용해요</small></div><button class="buy" id="autoToggle">${S.auto?'켜짐':'꺼짐'}</button></div>`}
  else{el.dataset.tab=tab;const g=soulGain();
   el.innerHTML=`<div class="reb"><div style="flex:1"><h3>환생 · 피의 계약</h3><p>모든 단계, 골드, 강화, 권속을 바치고 <b style="color:#ff6b7a">혈정</b>을 얻어요. 혈정 1개마다 모든 피해와 골드 +10%.<br>최고 단계 <b style="color:var(--txt)">${S.maxStage}</b> · 보유 혈정 <b style="color:var(--txt)">${fmt(S.soul)}</b> (×${soulMul().toFixed(1)}) · 환생 ${S.rebirths}회</p></div><button class="buy" data-reb ${g>0?'':'disabled'}>${g>0?`+${fmt(g)} 혈정<small>환생하기</small>`:'30단계부터<small>환생 가능</small>'}</button></div>
@@ -481,7 +487,7 @@ function renderList(soft){const el=$('#list');
 function buy(id){const it=(tab==='up'?UPS:FAMS).find(x=>x.id===id),store=tab==='up'?S.up:S.fam;if(!it)return;const l=store[id]||0,n=mult==='max'?maxAfford(it,l):mult,c=bulkCost(it,l,n);if(S.gold<c||(it.max&&l>=it.max))return;S.gold-=c;store[id]=l+(it.max?Math.min(n,it.max-l):n);
  if(tab==='up'){hero.max=heroMax();for(let i=0;i<16;i++){const a=rand(0,TAU);parts.push({x:hero.x+Math.cos(a)*40,y:hero.y-10+Math.sin(a)*14,vx:0,vy:rand(-160,-60),life:rand(.5,.9),t:0,r:rand(1.5,3),k:'ember'})}}
  renderList();hudSoft();checkQuest();save()}
-function portUpd(){const C=CH();$('.port').style.backgroundImage=`url(${C.file}.webp)`;$('.pinfo .nm').textContent=`[${GR[C.g].n}] ${C.name}`;$('.pinfo .nm').style.color=GR[C.g].c}
+function portUpd(){const C=CH();$('.port').style.backgroundImage=`url(${C.file}.webp)`;$('.pinfo .nm').textContent=`[${GR[C.g].n}] ${C.name} ${C.sex==='f'?'♀':'♂'}`;$('.pinfo .nm').style.color=GR[C.g].c}
 function selectCls(id,gr){if(id)S.cls=id;if(gr)S.grade=gr;const C=CH();hero.trail.length=0;hero.act=null;hero.combo=0;renderList();hudSoft();save();portUpd();
  for(let i=0;i<50;i++){const a=rand(0,TAU),v=rand(60,260);parts.push({x:hero.x+Math.cos(a)*20,y:hero.y-80+Math.sin(a)*20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,life:rand(.5,1),t:0,r:rand(2,4),k:'ember'})}impact(hero.x,hero.y-70,C.col,1.6);flashScr(`rgba(${C.col},.3)`);showCard(`${GR[C.g].n} · ${C.en}`,C.name,C.combo,2200)}
 function modal(h){$('#mbox').innerHTML=h;$('#modal').classList.add('on')}
@@ -495,6 +501,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
  if(t.dataset.buy)return buy(t.dataset.buy);
  if(t.dataset.cls){selectCls(t.dataset.cls,null);return}
  if(t.dataset.grade){selectCls(null,+t.dataset.grade);return}
+ if(t.dataset.sex){S.sex=t.dataset.sex;selectCls(null,null);return}
  if(t.dataset.sk)return useSkill(t.dataset.sk);
  if(t.dataset.use)return useSkill(t.dataset.use);
  if(t.id==='autoBtn'||t.id==='autoToggle'){S.auto=!S.auto;renderSkills();if(tab==='skill')renderList();return}
@@ -715,8 +722,8 @@ function drawArc(s){const p=s.t/s.life,rev=Math.min(1,p*3.4),fade=p<.3?1:1-(p-.3
  cx.fillStyle=`rgba(${s.col},${fade*.45})`;arcPath(s,tail,a1,1.6);cx.fill();
  cx.shadowBlur=0;cx.fillStyle=`rgba(${s.col},${fade*.9})`;arcPath(s,tail,a1,1);cx.fill();
  cx.fillStyle=`rgba(255,248,240,${fade})`;arcPath(s,tail,a1,.38);cx.fill();cx.restore()}
-function drawHero(){const h=hero,C=CH(),img=IMG[C.img],HH=C.h,a=h.act;
- if(C.moon){const mx=h.x,my=h.y-HH*.8;cx.globalCompositeOperation='lighter';glow(mx,my,HH*.75,'rgba(255,30,50,A)',.3+Math.sin(T*2)*.06);cx.globalCompositeOperation='source-over';const g2=cx.createRadialGradient(mx-12,my-12,4,mx,my,HH*.36);g2.addColorStop(0,'rgba(255,150,130,.5)');g2.addColorStop(.7,'rgba(200,16,42,.4)');g2.addColorStop(1,'rgba(90,0,16,0)');cx.fillStyle=g2;cx.beginPath();cx.arc(mx,my,HH*.36,0,TAU);cx.fill()}
+function drawHero(){const h=hero,C=CH(),img=ok(IMG[C.img])?IMG[C.img]:IMG[C.fb.replace('td-','')]||IMG.hero,HH=C.h,a=h.act;
+ if(C.moon){const mx=h.x,my=h.y-HH*.75;cx.globalCompositeOperation='lighter';glow(mx,my,HH*.7,'rgba(255,30,50,A)',.26+Math.sin(T*2)*.06);cx.globalCompositeOperation='source-over'}
  if(C.g>=3){const gc=GR[C.g].c,n=parseInt(gc.slice(1),16);cx.globalCompositeOperation='lighter';glow(h.x,h.y-4,HH*.5,`rgba(${n>>16&255},${n>>8&255},${n&255},A)`,.12+C.g*.03+Math.sin(T*3)*.03);cx.globalCompositeOperation='source-over'}
  for(const g of h.trail)drawSprite(img,g.x,g.y-(g.yo||0),HH,g.f,{a:g.a*.5,f:`brightness(.7) sepia(1) saturate(7) hue-rotate(${C.hue}deg)`,op:'lighter'});
  let x=h.x,y=h.y,rot=0,sy=1,sx=1;h.yo=0;
@@ -754,10 +761,10 @@ function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;if(hitStop>0){h
  requestAnimationFrame(loop)}
 
 /* ========== 시작 ========== */
-{if(!S.cls){S.cls='blood';S.grade={hunter:1,leon:1,kain:2,gregor:3,wolhee:4,azrael:5,neferis:6}[S.char]||1}const qs=new URLSearchParams(location.search),qc=qs.get('cls'),qg=+qs.get('grade');if(qc&&CLASSES.some(c=>c.id===qc))S.cls=qc;if(qg>=1&&qg<=6)S.grade=qg;if(qs.get('char')==='neferis')S.grade=6}
+{if(!S.cls){S.cls='blood';S.grade={hunter:1,leon:1,kain:2,gregor:3,wolhee:4,azrael:5,neferis:6}[S.char]||1}const qs=new URLSearchParams(location.search),qc=qs.get('cls'),qg=+qs.get('grade');if(qc&&CLASSES.some(c=>c.id===qc))S.cls=qc;if(qg>=1&&qg<=6)S.grade=qg;if(qs.get('char')==='neferis')S.grade=6;const qx=qs.get('sex');if(qx==='m'||qx==='f')S.sex=qx}
 resize();hero.max=heroMax();hero.hp=hero.max;mapIdx=CHAPTERS[chapterOf(S.stage)%4].map;
 $('#fxBtn').classList.toggle('on',!S.lowfx);
-renderSkills();renderHud();renderList();offline();portUpd();
+renderSkills();renderHud();renderList();offline();portUpd();{const C=CH(),ti=document.querySelector('#title .th');if(ti){ti.onerror=()=>{ti.onerror=null;ti.src=C.fb+'.webp'};ti.src=C.file+'.webp'}}
 for(let i=0;i<4;i++)spawnMob();
 requestAnimationFrame(loop);
 </script>
