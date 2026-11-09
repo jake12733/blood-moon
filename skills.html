@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>스킬 도감 · 클래스별 등급 스킬 — 혈월의 사냥꾼</title>
+<meta name="theme-color" content="#070304">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--txt:#efe4d6;--mut:#9a8a80;--serif:'Noto Serif KR',serif;--cin:'Cinzel',serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070304;color:var(--txt);font-family:Pretendard,sans-serif;min-height:100vh}
+body::before{content:"";position:fixed;inset:-5%;background:url(map1.webp) center/cover;filter:brightness(.14) blur(3px);z-index:-2}
+body::after{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 30%,transparent 20%,#000 85%);z-index:-1}
+.wrap{width:min(1360px,95%);margin:0 auto;padding:48px 0 70px}
+header{text-align:center}
+header .o{font:700 .78rem var(--cin);letter-spacing:.6em;color:#cfa86a}
+header h1{font:900 clamp(1.9rem,4.6vw,3.2rem) var(--serif);letter-spacing:.1em;margin:8px 0;background:linear-gradient(180deg,#fff 20%,#ff6b7a 70%,#8a0a1c);-webkit-background-clip:text;background-clip:text;color:transparent}
+header p{color:var(--mut)}
+.bar{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:28px 0 10px}
+.bar button{padding:10px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(10,4,6,.7);color:var(--mut);font:700 .9rem var(--serif);cursor:pointer;transition:all .2s}
+.bar button.on{color:#fff;border-color:#ff4d66;box-shadow:0 0 16px rgba(255,77,102,.45);background:rgba(80,10,20,.5)}
+.bar small{font:700 .66rem var(--cin);letter-spacing:.12em;margin-left:6px;opacity:.7}
+.desc{text-align:center;color:var(--mut);font-size:.88rem;margin:6px 0 26px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{--c:170,175,185;border-radius:18px;padding:2px;background:rgb(var(--c));position:relative;transition:transform .3s;text-decoration:none;color:inherit;display:block}
+.card:hover{transform:translateY(-6px)}
+.card .in{border-radius:16px;overflow:hidden;background:#000;position:relative;display:flex;flex-direction:column;height:100%}
+.card .stage{position:relative;aspect-ratio:16/10;overflow:hidden;background:radial-gradient(ellipse at 50% 60%,rgba(var(--c),.18),#000 70%)}
+.card .stage img.fx{position:absolute;inset:-6%;width:112%;height:112%;object-fit:contain;mix-blend-mode:screen;animation:pulse 2.6s ease-in-out infinite}
+.card:hover .stage img.fx{animation-duration:1.2s}
+@keyframes pulse{0%,100%{transform:scale(.94);filter:brightness(1)}50%{transform:scale(1.04);filter:brightness(1.35)}}
+.card .ic{position:absolute;left:12px;bottom:12px;width:64px;height:64px;border-radius:12px;border:2px solid rgb(var(--c));box-shadow:0 0 16px rgba(var(--c),.6);background:#000 center/cover;z-index:2}
+.card .badge{position:absolute;left:12px;top:12px;z-index:2;font:900 .74rem var(--serif);padding:3px 11px;border-radius:999px;border:1px solid rgb(var(--c));background:rgba(var(--c),.22);color:#fff}
+.card .cd{position:absolute;right:12px;top:12px;z-index:2;font:700 .7rem var(--cin);color:rgb(var(--c));background:rgba(0,0,0,.6);padding:3px 9px;border-radius:999px}
+.card .bot{padding:14px 16px 16px;background:linear-gradient(180deg,rgba(var(--c),.08),transparent)}
+.card .bot b{display:block;font:900 1.12rem var(--serif)}
+.card .bot em{font:700 .66rem var(--cin);letter-spacing:.2em;color:rgb(var(--c));font-style:normal}
+.card .bot p{font-size:.82rem;color:#c9b9ad;margin-top:6px;line-height:1.5}
+.g4{box-shadow:0 0 24px rgba(185,110,255,.25)}
+.g5{background:linear-gradient(135deg,#ffcf6a,#a8741e,#ffe7a6,#a8741e);background-size:300% 300%;animation:gold 4s linear infinite;box-shadow:0 0 28px rgba(255,185,70,.35)}
+@keyframes gold{to{background-position:300% 0}}
+.g6{background:conic-gradient(from var(--a,0deg),#ff3355,#ffcf6a,#ff3355,#5a0010,#ff3355);animation:spin 4s linear infinite;box-shadow:0 0 34px rgba(255,60,85,.45)}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes spin{to{--a:360deg}}
+h2{font:900 1.2rem var(--serif);text-align:center;margin:46px 0 16px;letter-spacing:.1em}
+.basic{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;max-width:760px;margin:0 auto}
+.basic .card .stage{aspect-ratio:16/9}
+.cta{display:flex;justify-content:center;gap:12px;margin-top:34px;flex-wrap:wrap}
+.cta a{padding:13px 26px;border-radius:999px;border:1px solid #ff4d66;color:#fff;text-decoration:none;font:900 .95rem var(--serif);background:linear-gradient(180deg,#5a0c18,#2a0509);box-shadow:0 0 22px rgba(255,60,85,.35)}
+.cta a.sub{border-color:rgba(255,255,255,.2);background:rgba(10,4,6,.7);box-shadow:none;color:var(--mut)}
+.note{text-align:center;color:#6f625a;font-size:.74rem;margin-top:26px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.grid,.basic{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="o">SKILL CODEX</div><h1>스킬 도감</h1><p>뱀피르 클래스 스킬을 바탕으로 만든 등급별 6종 · 캐릭터 등급이 오를수록 상위 스킬이 열려요</p></header>
+<div class="bar" id="bar"></div>
+<div class="desc" id="desc"></div>
+<div class="grid" id="grid"></div>
+<h2>기본 공격 이펙트</h2>
+<div class="basic" id="basic"></div>
+<div class="cta"><a id="play" href="./">이 클래스로 사냥하기 →</a><a class="sub" href="appearance.html">외형 도감</a></div>
+<p class="note">스킬 이름과 컨셉은 넷마블 뱀피르(VAMPIR)의 클래스 스킬을 참고했고, 수치는 이 게임에 맞게 조정했어요.</p>
+</div>
+<script>
+const CSK={
+ blood:[
+  {n:'블러디 스탭',en:'BLOODY STAB',cd:6,d:'피의 검을 앞으로 4번 찔러 직선 위 적 모두에게 공격력 220% × 4 피해'},
+  {n:'블러드 스톰',en:'BLOOD STORM',cd:9,d:'대검을 휘돌려 주변을 3번 베어 공격력 400% × 3 피해'},
+  {n:'냉혹한 칼날',en:'RUTHLESS BLADE',cd:12,d:'땅에서 솟구치는 올려베기로 공격력 1,400% 피해 · 적을 띄움'},
+  {n:'블러드 레이지',en:'BLOOD RAGE',cd:16,d:'끓어오르는 피의 폭발로 주변에 공격력 1,800% 피해 · 최대 HP 15% 흡혈'},
+  {n:'디자이어 오브 블러드',en:'DESIRE OF BLOOD',cd:20,d:'피의 사슬을 던져 경로의 적에게 공격력 2,200% 피해 · 적을 끌어당김'},
+  {n:'블러디 퍼로시티',en:'BLOODY FEROCITY',cd:30,d:'발밑에서 거대한 피의 가시가 폭발해 주변에 공격력 3,200% 피해'}],
+ akasha:[
+  {n:'혼돈의 일격',en:'STRIKE OF CHAOS',cd:6,d:'두 톤파를 교차해 베어 공격력 1,000% 피해'},
+  {n:'혈색 베기',en:'CRIMSON CUT',cd:9,d:'핏빛 초승달 2연격 · 공격력 650% × 2 피해'},
+  {n:'난도',en:'BLADE FRENZY',cd:12,d:'눈에 보이지 않는 난타 4연격 · 공격력 400% × 4 피해'},
+  {n:'사슬 베기',en:'CHAIN SLASH',cd:16,d:'사슬 칼날 폭풍으로 주변을 6번 베어 공격력 330% × 6 피해'},
+  {n:'먹잇감 사냥',en:'PREY HUNT',cd:20,d:'혈석 표식을 새긴 뒤 표적의 등 뒤로 순간이동해 공격력 2,400% 일격'},
+  {n:'파멸의 순간',en:'MOMENT OF RUIN',cd:30,d:'주변을 파멸의 혈월진으로 폭파해 공격력 3,600% 피해 · HP 20% 회복'}],
+ carnage:[
+  {n:'무장 해제',en:'DISARM',cd:6,d:'관통탄 한 발로 공격력 1,000% 피해'},
+  {n:'난사',en:'RAPID FIRE',cd:9,d:'부채꼴로 6발을 난사해 맞은 적마다 공격력 300% 피해'},
+  {n:'저주받은 영혼',en:'CURSED SOUL',cd:12,d:'비명 지르는 영혼탄이 폭발해 주변에 공격력 1,400% 피해'},
+  {n:'샷 오브 데스',en:'SHOT OF DEATH',cd:16,d:'일직선 관통 광선 3연사 · 공격력 500% · 500% · 900% 피해'},
+  {n:'영혼 난사',en:'SOUL BARRAGE',cd:20,d:'사방으로 영혼탄 폭풍 6연발 · 공격력 380% × 6 피해'},
+  {n:'파멸의 탄환',en:'BULLET OF RUIN',cd:30,d:'종말의 탄환이 폭발해 넓은 범위에 공격력 4,000% 피해'}],
+ viper:[
+  {n:'독 폭발',en:'POISON BURST',cd:6,d:'맹독을 터뜨려 2번 폭발 · 공격력 500% × 2 피해'},
+  {n:'고통의 속삭임',en:'WHISPER OF PAIN',cd:9,d:'망령의 속삭임이 소용돌이쳐 공격력 1,400% 피해'},
+  {n:'칠흑의 부름',en:'CALL OF PITCH-BLACK',cd:12,d:'칠흑의 사역마 「꿰뚫는 자」를 10초간 소환 · 0.7초마다 공격력 400% 피해'},
+  {n:'고통의 늪',en:'SWAMP OF AGONY',cd:16,d:'망자의 손이 솟는 독의 늪 · 3초 동안 10번, 공격력 260%씩 피해'},
+  {n:'부패의 고리',en:'RING OF DECAY',cd:20,d:'부패의 마법진이 폭발해 공격력 800% + 1,600% 피해'},
+  {n:'볼텍스',en:'VORTEX',cd:30,d:'저주의 대폭풍이 적을 빨아들이며 6번 공격력 600%씩 피해'}]};
+const GNM=['','일반','고급','희귀','영웅','전설','신화'];
+const GRC=['','170,175,185','80,210,120','80,170,255','185,110,255','255,185,70','255,60,85'];
+const CL=[{id:'blood',n:'블러드스테인',en:'BLOODSTAINED',d:'피의 대검을 휘두르는 광전사 · 흡혈과 근접 폭딜'},{id:'akasha',n:'아카샤',en:'AKASHA',d:'칼날 톤파로 표적을 끝까지 쫓는 추격 학살자'},{id:'carnage',n:'카니지',en:'CARNAGE',d:'피로 벼린 총기로 연사하는 원거리 처형인'},{id:'viper',n:'바이퍼',en:'VIPER',d:'독 · 저주 · 사역마를 다루는 저주 술사'}];
+let cur=new URLSearchParams(location.search).get('cls');if(!CL.some(c=>c.id===cur))cur='blood';
+function render(){const c=CL.find(x=>x.id===cur);
+document.getElementById('bar').innerHTML=CL.map(x=>`<button data-c="${x.id}" class="${x.id===cur?'on':''}">${x.n}<small>${x.en}</small></button>`).join('');
+document.getElementById('desc').textContent=c.d;
+document.getElementById('grid').innerHTML=CSK[cur].map((s,i)=>{const n=i+1;return`<a class="card g${n}" style="--c:${GRC[n]}" href="./?cls=${cur}&grade=${n}"><div class="in"><div class="stage"><img class="fx" src="sk-${cur}-${n}.webp" alt="${s.n} 이펙트" loading="lazy"><span class="badge">${GNM[n]}</span><span class="cd">CD ${s.cd}s</span><div class="ic" style="background-image:url(ic-${cur}-${n}.webp)"></div></div><div class="bot"><em>${s.en}</em><b>${s.n}</b><p>${s.d}</p></div></div></a>`}).join('');
+document.getElementById('basic').innerHTML=[['swing','평타 궤적'],['hit','타격 이펙트']].map(([k,t])=>`<div class="card" style="--c:255,60,85"><div class="in"><div class="stage"><img class="fx" src="ba-${cur}-${k}.webp" alt="${t}"></div><div class="bot"><em>BASIC ATTACK</em><b>${t}</b></div></div></div>`).join('');
+document.getElementById('play').href='./?cls='+cur;history.replaceState(null,'','?cls='+cur)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b){cur=b.dataset.c;render()}});render();
+</script>
+</body>
+</html>
