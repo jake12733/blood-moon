@@ -167,9 +167,16 @@ body.bloodmoon #view::after{background:radial-gradient(ellipse at 50% 55%,rgba(1
 @media(max-width:760px){
   #panel{height:38vh}
   #tc{top:8px;min-width:0}
-  #tc .st{font-size:1.2rem}
+  #tc .st{font-size:1.15rem}
+  #tc .ch{font-size:.6rem;letter-spacing:.08em;white-space:nowrap}
+  #tc .ch::before,#tc .ch::after{display:none}
+  .bar.ex{display:none}
+  .bar.hp{border-radius:10px;margin-right:-6px}
   .wave{width:170px}
-  #quest{top:auto;bottom:96px;right:auto;left:10px;width:180px}
+  #quest{top:64px;bottom:auto;right:auto;left:8px;width:150px;padding:6px 9px}
+  #quest .qt{font-size:.7rem;margin:1px 0 4px}
+  #quest .qh{font-size:.6rem}
+  #quest .qp{font-size:.58rem}
   #tl .pinfo{display:none}
   .port{width:44px;height:44px}
   .chip{min-width:78px;font-size:.74rem;padding:3px 9px 3px 4px}
@@ -551,10 +558,10 @@ function render(){
  // 참격
  for(const s of slashes){const p=s.t/s.life;cx.save();cx.translate(s.x,s.y);
   if(s.claw){cx.rotate(s.a);cx.strokeStyle=`rgba(255,${120-p*100},${130-p*100},${1-p})`;cx.lineWidth=4*(1-p)+1;cx.beginPath();cx.moveTo(-s.r*.5,0);cx.lineTo(s.r*.5*(.3+p),0);cx.stroke()}
-  else{cx.rotate(s.a);cx.scale(1,.62);const a0=-1.25*s.dir,a1=1.25*s.dir,cur=a0+(a1-a0)*Math.min(1,p*1.7);cx.lineCap='round';
+  else{cx.rotate(s.a);cx.scale(1,.62);if(!S.lowfx){cx.shadowColor='rgba(255,40,60,.9)';cx.shadowBlur=s.crit?28:18}const a0=-1.25*s.dir,a1=1.25*s.dir,cur=a0+(a1-a0)*Math.min(1,p*1.7);cx.lineCap='round';
    for(let k=0;k<3;k++){cx.strokeStyle=k===0?`rgba(255,40,60,${(1-p)*.55})`:k===1?`rgba(255,120,120,${(1-p)*.8})`:`rgba(255,235,225,${1-p})`;cx.lineWidth=(s.crit?30:22)*(1-k*.32)*(1-p*.6);cx.beginPath();cx.arc(0,0,s.r*(1+k*.04),Math.min(a0,cur),Math.max(a0,cur));cx.stroke()}}
   cx.restore()}
- for(const w of waves){const p=w.t/w.life;cx.save();cx.translate(w.x,w.y);cx.rotate(w.a);cx.scale(1,.7);
+ for(const w of waves){const p=w.t/w.life;cx.save();cx.translate(w.x,w.y);cx.rotate(w.a);cx.scale(1,.7);if(!S.lowfx){cx.shadowColor='rgba(255,20,50,.9)';cx.shadowBlur=40}
   for(let k=0;k<4;k++){cx.strokeStyle=k<2?`rgba(255,20,50,${(1-p)*(.5-k*.15)})`:k===2?`rgba(255,140,140,${(1-p)*.9})`:`rgba(255,245,235,${1-p})`;cx.lineWidth=[90,60,26,10][k];cx.beginPath();cx.arc(-60,0,160,-1.05,1.05);cx.stroke()}
   cx.restore();glow(w.x,w.y,190,'rgba(255,30,60,A)',(1-p)*.35)}
  // 파티클
