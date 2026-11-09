@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>캐릭터 도감 · 등급 체계 — 혈월의 사냥꾼</title>
+<meta name="theme-color" content="#070304">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Noto+Serif+KR:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{--bg:#070304;--txt:#efe4d6;--mut:#9a8a80;--serif:'Noto Serif KR',serif;--cin:'Cinzel',serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--txt);font-family:Pretendard,sans-serif;min-height:100vh;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:-5%;background:url(map1.webp) center/cover;filter:brightness(.18) blur(3px);z-index:-2}
+body::after{content:"";position:fixed;inset:0;background:radial-gradient(ellipse at 50% 30%,transparent 20%,#000 85%);z-index:-1}
+.wrap{width:min(1320px,94%);margin:0 auto;padding:56px 0 80px}
+header{text-align:center}
+header .o{font:700 .8rem var(--cin);letter-spacing:.6em;color:#cfa86a}
+header h1{font:900 clamp(2rem,5vw,3.4rem) var(--serif);letter-spacing:.1em;margin:10px 0;background:linear-gradient(180deg,#fff 20%,#ff6b7a 70%,#8a0a1c);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 20px rgba(255,20,40,.45))}
+header p{color:var(--mut);font-size:.95rem}
+.ln{width:min(420px,70%);height:1px;margin:18px auto;background:linear-gradient(90deg,transparent,#b8935a,transparent)}
+/* grade legend */
+.legend{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:34px 0 26px}
+.lg{border-radius:10px;padding:14px 12px;text-align:center;background:rgba(10,4,6,.75);border:1px solid var(--c);position:relative;overflow:hidden;cursor:pointer;transition:transform .25s}
+.lg:hover,.lg.on{transform:translateY(-3px);box-shadow:0 0 22px color-mix(in srgb,var(--c) 45%,transparent)}
+.lg.on{background:color-mix(in srgb,var(--c) 14%,rgba(10,4,6,.85))}
+.lg b{display:block;font:900 1.05rem var(--serif);color:var(--c)}
+.lg small{display:block;font:700 .62rem var(--cin);letter-spacing:.2em;color:var(--mut);margin-top:2px}
+.lg .r{font:700 .78rem var(--cin);margin-top:8px;color:var(--txt)}
+.lg .m{font-size:.7rem;color:var(--mut)}
+.lg .st{color:var(--c);font-size:.8rem;letter-spacing:1px;margin-top:4px}
+.lg.myth{background:linear-gradient(135deg,rgba(60,0,10,.85),rgba(20,4,8,.85))}
+.lg.myth b{background:linear-gradient(90deg,#ff3b52,#ffd36a,#ff3b52);background-size:200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 3s linear infinite}
+@keyframes sh{to{background-position:200% 0}}
+.all{display:block;margin:0 auto 26px;padding:8px 18px;border-radius:20px;border:1px solid rgba(255,255,255,.15);background:none;color:var(--mut);font:700 .8rem Pretendard;cursor:pointer}
+.all.on{color:var(--txt);border-color:#cfa86a}
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;perspective:1200px}
+.card{--c:#8a8a8a;position:relative;border-radius:18px;padding:2px;cursor:pointer;transition:transform .35s cubic-bezier(.2,.8,.2,1),opacity .4s;transform-style:preserve-3d;background:var(--c)}
+.card.hide{display:none}
+.card .in{position:relative;border-radius:16px;overflow:hidden;background:radial-gradient(ellipse at 50% 35%,color-mix(in srgb,var(--c) 30%,#140709) 0%,#0a0405 70%);aspect-ratio:3/4.3;display:flex;flex-direction:column}
+.card .art{position:absolute;inset:6% 0 26%;display:flex;align-items:flex-end;justify-content:center;z-index:2}
+.card .art img{width:112%;max-width:none;transform:translateY(6%);filter:drop-shadow(0 10px 24px rgba(0,0,0,.8));transition:transform .5s}
+.card:hover .art img{transform:translateY(3%) scale(1.04)}
+.card .top{position:relative;z-index:3;display:flex;justify-content:space-between;align-items:center;padding:14px 16px}
+.card .badge{font:900 .78rem var(--serif);padding:4px 12px;border-radius:999px;background:color-mix(in srgb,var(--c) 22%,rgba(0,0,0,.6));border:1px solid var(--c);color:#fff;letter-spacing:.1em}
+.card .stars{color:var(--c);font-size:.9rem;letter-spacing:1px;text-shadow:0 0 8px var(--c)}
+.card .bot{position:relative;z-index:3;margin-top:auto;padding:16px 18px 18px;background:linear-gradient(180deg,transparent,rgba(0,0,0,.85) 30%)}
+.card .ti{font:700 .74rem var(--serif);color:var(--c);letter-spacing:.15em}
+.card h3{font:900 1.5rem var(--serif);letter-spacing:.06em;margin:2px 0 8px}
+.card .meta{display:flex;gap:8px;font-size:.72rem;color:var(--mut)}
+.card .meta span{padding:2px 8px;border:1px solid rgba(255,255,255,.12);border-radius:4px}
+.card .pw{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font:700 .8rem var(--cin)}
+.card .pw b{font-size:1.05rem;color:#fff}
+/* grade effects */
+.g1{--c:#9aa0a6}
+.g2{--c:#4fd17a}
+.g2{box-shadow:0 0 18px rgba(79,209,122,.25)}
+.g3{--c:#4aa8ff;box-shadow:0 0 24px rgba(74,168,255,.35)}
+.g4{--c:#b46bff;box-shadow:0 0 30px rgba(180,107,255,.45)}
+.g5{--c:#ffb340;background:linear-gradient(135deg,#ffe29a,#ff9a1f 30%,#7a4a10 50%,#ffcf6a 70%,#ff8a00);background-size:300% 300%;animation:gold 4s ease infinite;box-shadow:0 0 40px rgba(255,170,60,.5)}
+@keyframes gold{50%{background-position:100% 100%}}
+.g6{--c:#ff3b52;background:conic-gradient(from var(--a,0deg),#ff1f3d,#ffd36a,#ff1f3d,#7a0018,#ff1f3d);animation:spin 4s linear infinite;box-shadow:0 0 50px rgba(255,30,60,.6),0 0 100px rgba(255,30,60,.25)}
+@property --a{syntax:'<angle>';inherits:false;initial-value:0deg}
+@keyframes spin{to{--a:360deg}}
+.g6 .in{background:radial-gradient(ellipse at 50% 30%,#5a0614 0%,#1a0307 55%,#070203 100%)}
+.g6 .stars{background:linear-gradient(90deg,#ff3b52,#ffd36a,#ff3b52);background-size:200%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:sh 2.5s linear infinite;text-shadow:none}
+.g6 .badge{background:linear-gradient(90deg,#7a0018,#ff3b52,#ffd36a,#ff3b52,#7a0018);background-size:200%;animation:sh 3s linear infinite;border-color:#ffd36a;color:#fff}
+/* sweep shine for 전설/신화 */
+.g5 .in::after,.g6 .in::after{content:"";position:absolute;inset:0;z-index:4;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.22) 50%,transparent 65%);transform:translateX(-120%);animation:sweep 3.6s ease-in-out infinite;pointer-events:none}
+@keyframes sweep{60%,100%{transform:translateX(120%)}}
+/* aura for 영웅 이상 */
+.aura{position:absolute;left:50%;top:44%;width:80%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--c) 55%,transparent),transparent 65%);z-index:1;animation:pulse 3s ease-in-out infinite;opacity:0}
+.g3 .aura{opacity:.35}.g4 .aura{opacity:.6}.g5 .aura{opacity:.8}.g6 .aura{opacity:1}
+@keyframes pulse{50%{transform:translate(-50%,-50%) scale(1.12)}}
+.g6 .moon{position:absolute;left:50%;top:30%;width:62%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle at 40% 35%,#ff9a8a,#c0102a 55%,#4a0010 100%);box-shadow:0 0 60px rgba(255,30,50,.8);z-index:1;opacity:.55;animation:pulse 5s ease-in-out infinite}
+canvas.pt{position:absolute;inset:0;width:100%;height:100%;z-index:3;pointer-events:none}
+/* table */
+.tbl{margin-top:56px;background:rgba(10,4,6,.8);border:1px solid rgba(255,70,89,.18);border-radius:14px;overflow:hidden}
+.tbl h2{font:900 1.2rem var(--serif);padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid rgba(255,255,255,.06)}
+th{font:700 .72rem var(--cin);letter-spacing:.1em;color:var(--mut)}
+td b{font-family:var(--serif)}
+/* modal */
+.md{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.md.on{display:flex}
+.mb{width:min(980px,100%);max-height:92vh;overflow:auto;display:grid;grid-template-columns:1fr 1fr;border-radius:18px;background:#0c0507;border:1px solid var(--c);box-shadow:0 0 60px color-mix(in srgb,var(--c) 40%,transparent);position:relative}
+.mb .ma{position:relative;background:radial-gradient(ellipse at 50% 40%,color-mix(in srgb,var(--c) 35%,#140709),#070203 75%);display:flex;align-items:flex-end;justify-content:center;min-height:520px;overflow:hidden}
+.mb .ma img{width:110%;max-width:none;position:relative;z-index:2}
+.mb .mt{padding:34px 30px}
+.mb .x{position:absolute;right:14px;top:12px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.5);color:#fff;font-size:1rem;cursor:pointer;z-index:5}
+.mb .ti{font:700 .8rem var(--serif);color:var(--c);letter-spacing:.2em}
+.mb h2{font:900 2.2rem var(--serif);margin:4px 0 12px}
+.mb .lore{color:#c9b8a6;line-height:1.75;font-size:.92rem;font-family:var(--serif)}
+.stat{margin-top:20px;display:grid;gap:10px}
+.stat div{display:grid;grid-template-columns:64px 1fr 56px;align-items:center;gap:10px;font-size:.8rem;color:var(--mut)}
+.stat i{height:7px;border-radius:4px;background:rgba(255,255,255,.08);position:relative;overflow:hidden}
+.stat i::after{content:"";position:absolute;inset:0;width:var(--w);background:linear-gradient(90deg,color-mix(in srgb,var(--c) 60%,#000),var(--c));border-radius:4px}
+.stat b{font:700 .85rem var(--cin);color:var(--txt);text-align:right}
+.skill{margin-top:22px;padding:14px 16px;border-radius:10px;border:1px solid color-mix(in srgb,var(--c) 45%,transparent);background:color-mix(in srgb,var(--c) 8%,transparent)}
+.skill small{font:700 .66rem var(--cin);letter-spacing:.2em;color:var(--c)}
+.skill b{display:block;font:900 1.05rem var(--serif);margin:3px 0}
+.skill p{font-size:.84rem;color:var(--mut);line-height:1.6}
+.back{display:inline-block;margin-top:36px;color:#cfa86a;font:700 .85rem var(--serif);letter-spacing:.2em;text-decoration:none}
+@media(max-width:980px){.grid{grid-template-columns:repeat(2,1fr)}.legend{grid-template-columns:repeat(3,1fr)}.mb{grid-template-columns:1fr}.mb .ma{min-height:380px}}
+@media(max-width:560px){.grid{grid-template-columns:1fr 1fr;gap:12px}.legend{grid-template-columns:repeat(2,1fr)}.card h3{font-size:1.05rem}.card .meta{display:none}.card .top{padding:10px}.card .bot{padding:10px 12px 12px}.card .badge{font-size:.62rem;padding:3px 8px}.card .stars{font-size:.66rem}table{font-size:.74rem}th,td{padding:9px 8px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="o">CHARACTER CODEX</div>
+    <h1>캐릭터 도감</h1>
+    <div class="ln"></div>
+    <p>혈월 아래 모여든 사냥꾼들 · 6단계 등급 체계 (일반 → 신화)</p>
+  </header>
+  <div class="legend" id="legend"></div>
+  <button class="all on" id="allBtn">전체 보기</button>
+  <div class="grid" id="grid"></div>
+  <div class="tbl">
+    <h2>등급별 기준</h2>
+    <table>
+      <thead><tr><th>등급</th><th>획득 확률</th><th>능력치 배율</th><th>최대 레벨</th><th>카드 연출</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div style="text-align:center"><a class="back" href="./">← 게임으로 돌아가기</a></div>
+</div>
+<div class="md" id="md"><div class="mb" id="mb"></div></div>
+<script>
+const G=[
+ {k:1,n:'일반',e:'COMMON',c:'#9aa0a6',rate:'52%',mul:'×1.0',max:20,fx:'단색 테두리'},
+ {k:2,n:'고급',e:'UNCOMMON',c:'#4fd17a',rate:'28%',mul:'×1.4',max:30,fx:'초록 광채'},
+ {k:3,n:'희귀',e:'RARE',c:'#4aa8ff',rate:'13%',mul:'×2.0',max:40,fx:'푸른 오라 · 서리 입자'},
+ {k:4,n:'영웅',e:'EPIC',c:'#b46bff',rate:'5.5%',mul:'×3.0',max:50,fx:'보랏빛 오라 · 영혼 불꽃'},
+ {k:5,n:'전설',e:'LEGENDARY',c:'#ffb340',rate:'1.3%',mul:'×5.0',max:60,fx:'황금 흐름 테두리 · 빛 스윕 · 불티'},
+ {k:6,n:'신화',e:'MYTHIC',c:'#ff3b52',rate:'0.2%',mul:'×8.0',max:80,fx:'회전 혈월 테두리 · 혈월 후광 · 핏빛 입자'}];
+const C=[
+ {g:1,img:'ch-common',name:'레온',title:'마을 자경단원',cls:'원거리',wpn:'석궁',st:[22,30,40,25],pw:'1,240',
+  lore:'혈월이 처음 떠오른 밤, 마을을 지키겠다며 낡은 석궁 하나를 들고 나선 청년. 가진 것은 등불과 용기뿐이지만, 그가 쏜 첫 화살이 모든 사냥의 시작이었다.',sk:['석궁 연사','전방의 적에게 화살 3발을 연속으로 발사해 공격력 120% 피해']},
+ {g:2,img:'ch-uncommon',name:'카인',title:'은탄의 사냥꾼',cls:'원거리',wpn:'쌍권총',st:[36,32,58,30],pw:'2,180',
+  lore:'은으로 녹여 만든 탄환만을 고집하는 떠돌이 사냥꾼. 넓은 챙 모자 아래로 그를 본 흡혈귀는 아무도 살아남지 못했다는 소문이 돈다.',sk:['은탄 난사','2초간 주변 적에게 은탄을 난사, 언데드에게 추가 피해 50%']},
+ {g:3,img:'ch-rare',name:'그레고르',title:'대성당 처형인',cls:'근접 · 탱커',wpn:'처형 도끼',st:[52,70,30,45],pw:'4,050',
+  lore:'무너진 대성당의 마지막 처형인. 푸른 룬이 새겨진 도끼는 수백 년간 이단과 괴물의 목을 베어왔고, 그 냉기는 지금도 가시지 않았다.',sk:['서리 단두','도끼를 내려찍어 범위 내 적에게 공격력 300% 피해 + 2초 빙결']},
+ {g:4,img:'ch-epic',name:'월희',title:'혈귀 무녀',cls:'마법 · 서포터',wpn:'영혼의 방울',st:[64,48,52,88],pw:'7,600',
+  lore:'혈월 아래 신당을 지키던 무녀. 방울 소리 한 번에 떠도는 원혼이 부적에 깃들고, 그녀의 진혼곡은 아군을 일으키고 적의 영혼을 묶는다.',sk:['보랏빛 진혼령','부적 6장을 날려 적에게 공격력 450% 피해, 아군 공격 속도 20% 증가']},
+ {g:5,img:'ch-legend',name:'아즈라엘',title:'황금 혈기사',cls:'근접 · 딜러',wpn:'황혼의 성검',st:[90,78,70,62],pw:'15,800',
+  lore:'왕을 지키다 흡혈의 저주를 받아들인 기사단장. 피와 황금으로 벼려진 성검은 밤을 가르는 한 줄기 황혼이 되어, 그가 지나간 자리에 불티만을 남긴다.',sk:['황혼의 일섬','화면을 가로지르는 황금 참격, 모든 적에게 공격력 900% 피해 · 치명타 확정']},
+ {g:6,img:'ch-myth',name:'네페리스',title:'혈월의 화신',cls:'초월 · 전능',wpn:'혈월 그 자체',st:[100,95,90,100],pw:'42,000',
+  lore:'하늘의 혈월이 사람의 형상을 빌려 내려온 존재. 그녀가 숨을 쉬면 대지의 피가 하늘로 솟고, 날개를 펼치면 밤이 영원해진다. 사냥꾼들은 그녀를 사냥하지 않는다 — 그녀에게 선택받을 뿐.',sk:['혈월 강림 · 종말','30초간 모든 피해 ×5, 쓰러진 적의 피를 흡수해 아군 전체 회복 · 1분마다 피의 비']}];
+const $=s=>document.querySelector(s);
+const stars=n=>'★'.repeat(n);
+$('#legend').innerHTML=G.map(g=>`<div class="lg ${g.k===6?'myth':''}" data-g="${g.k}" style="--c:${g.c}"><b>${g.n}</b><small>${g.e}</small><div class="st">${stars(g.k)}</div><div class="r">${g.rate}</div><div class="m">능력치 ${g.mul}</div></div>`).join('');
+$('#grid').innerHTML=C.map((c,i)=>{const g=G[c.g-1];return`<div class="card g${c.g}" data-i="${i}" data-g="${c.g}"><div class="in">${c.g===6?'<div class="moon"></div>':''}<div class="aura"></div>${c.g>=3?'<canvas class="pt"></canvas>':''}<div class="top"><span class="badge">${g.n}</span><span class="stars">${stars(c.g)}</span></div><div class="art"><img src="${c.img}.webp" alt="${c.name}" loading="lazy"></div><div class="bot"><div class="ti">${c.title}</div><h3>${c.name}</h3><div class="meta"><span>${c.cls}</span><span>${c.wpn}</span></div><div class="pw"><span style="color:var(--mut)">전투력</span><b>${c.pw}</b></div></div></div></div>`}).join('');
+$('#tbody').innerHTML=G.map(g=>`<tr><td><b style="color:${g.c}">${stars(g.k)} ${g.n}</b> <span style="color:var(--mut);font-size:.72rem">${g.e}</span></td><td>${g.rate}</td><td>${g.mul}</td><td>Lv.${g.max}</td><td style="color:var(--mut)">${g.fx}</td></tr>`).join('');
+// filter
+document.querySelectorAll('.lg').forEach(l=>l.onclick=()=>{const g=l.dataset.g;document.querySelectorAll('.lg').forEach(x=>x.classList.toggle('on',x===l));$('#allBtn').classList.remove('on');document.querySelectorAll('.card').forEach(c=>c.classList.toggle('hide',c.dataset.g!==g))});
+$('#allBtn').onclick=()=>{document.querySelectorAll('.lg').forEach(x=>x.classList.remove('on'));$('#allBtn').classList.add('on');document.querySelectorAll('.card').forEach(c=>c.classList.remove('hide'))};
+// tilt
+document.querySelectorAll('.card').forEach(c=>{c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform=`rotateY(${x*14}deg) rotateX(${-y*14}deg) translateZ(10px)`});c.addEventListener('mouseleave',()=>c.style.transform='');
+ c.addEventListener('click',()=>openMd(+c.dataset.i))});
+// modal
+const STN=['공격','체력','속도','특수'];
+function openMd(i){const c=C[i],g=G[c.g-1];const mb=$('#mb');mb.style.setProperty('--c',g.c);
+ mb.innerHTML=`<button class="x" onclick="document.getElementById('md').classList.remove('on')">✕</button><div class="ma">${c.g===6?'<div class="moon" style="opacity:.6"></div>':''}<div class="aura" style="opacity:${c.g>=3?.8:0}"></div><img src="${c.img}.webp" alt=""></div><div class="mt"><span class="badge" style="font:900 .78rem var(--serif);padding:4px 12px;border-radius:999px;border:1px solid ${g.c};color:${g.c}">${stars(c.g)} ${g.n} · ${g.e}</span><div class="ti" style="margin-top:16px">${c.title}</div><h2>${c.name}</h2><p class="lore">${c.lore}</p><div class="stat">${c.st.map((v,k)=>`<div><span>${STN[k]}</span><i style="--w:${v}%"></i><b>${v}</b></div>`).join('')}</div><div class="skill"><small>SIGNATURE SKILL</small><b>${c.sk[0]}</b><p>${c.sk[1]}</p></div><p style="margin-top:16px;font-size:.78rem;color:var(--mut)">획득 확률 ${g.rate} · 능력치 배율 ${g.mul} · 최대 Lv.${g.max} · 전투력 ${c.pw}</p></div>`;
+ $('#md').classList.add('on')}
+$('#md').addEventListener('click',e=>{if(e.target.id==='md')e.currentTarget.classList.remove('on')});
+addEventListener('keydown',e=>{if(e.key==='Escape')$('#md').classList.remove('on')});
+// particles per card (희귀 이상)
+const PCOL={3:'150,200,255',4:'190,130,255',5:'255,190,80',6:'255,60,80'};
+const pcs=[...document.querySelectorAll('.card')].filter(c=>+c.dataset.g>=3).map(c=>{const cv=c.querySelector('canvas'),g=+c.dataset.g;return{cv,x:cv.getContext('2d'),g,ps:[]}});
+function rs(){pcs.forEach(p=>{const r=p.cv.getBoundingClientRect();p.cv.width=r.width;p.cv.height=r.height})}addEventListener('resize',rs);rs();
+let lt=performance.now();
+(function lp(t){const dt=Math.min(.05,(t-lt)/1000);lt=t;
+ pcs.forEach(p=>{const{x,cv,g}=p,W=cv.width,H=cv.height;const n=[0,0,0,18,28,40,64][g];
+  while(p.ps.length<n)p.ps.push({x:Math.random()*W,y:H*(.4+Math.random()*.6),vy:-(10+Math.random()*30)*(g>=5?1.6:1),vx:(Math.random()-.5)*12,r:Math.random()*(g>=5?2.4:1.6)+.4,l:2+Math.random()*3,t:0});
+  x.clearRect(0,0,W,H);x.globalCompositeOperation='lighter';
+  p.ps.forEach(q=>{q.t+=dt;q.x+=q.vx*dt+Math.sin(q.t*2+q.r*7)*.3;q.y+=q.vy*dt;const k=Math.sin(Math.PI*Math.min(1,q.t/q.l));const gr=x.createRadialGradient(q.x,q.y,0,q.x,q.y,q.r*4);gr.addColorStop(0,`rgba(${PCOL[g]},${k*.9})`);gr.addColorStop(1,`rgba(${PCOL[g]},0)`);x.fillStyle=gr;x.beginPath();x.arc(q.x,q.y,q.r*4,0,7);x.fill()});
+  p.ps=p.ps.filter(q=>q.t<q.l)});
+ requestAnimationFrame(lp)})(lt);
+</script>
+</body>
+</html>
