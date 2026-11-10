@@ -75,25 +75,26 @@ addEventListener('pointerdown', () => SFX.init());
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.75)); renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05; renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.4; renderer.outputColorSpace = THREE.SRGBColorSpace;
 document.body.prepend(renderer.domElement);
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x0a0306); scene.fog = new THREE.FogExp2(0x12050a, 0.034);
+scene.background = new THREE.Color(0x0a0306); scene.fog = new THREE.FogExp2(0x1a070d, 0.022);
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, .1, 220);
 const composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .85, .55, .72); composer.addPass(bloom); composer.addPass(new OutputPass());
+const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .7, .5, .82); composer.addPass(bloom); composer.addPass(new OutputPass());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); composer.setSize(innerWidth, innerHeight); });
 
 /* 조명: 차가운 달빛 + 붉은 역광 */
-scene.add(new THREE.HemisphereLight(0x3a4a6a, 0x1a0508, .55));
-const moonL = new THREE.DirectionalLight(0xff3344, 2.2); moonL.position.set(-14, 22, -18); moonL.castShadow = true; moonL.shadow.mapSize.set(2048, 2048);
+scene.add(new THREE.HemisphereLight(0x6a7896, 0x2a0a10, 1.25));
+const moonL = new THREE.DirectionalLight(0xff3344, 3.2); moonL.position.set(-14, 22, -18); moonL.castShadow = true; moonL.shadow.mapSize.set(2048, 2048);
 Object.assign(moonL.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 80 }); moonL.shadow.bias = -.0008; scene.add(moonL); scene.add(moonL.target);
-const fillL = new THREE.DirectionalLight(0x8899cc, .55); fillL.position.set(10, 12, 14); scene.add(fillL);
+const fillL = new THREE.DirectionalLight(0xc8d0ff, 1.6); fillL.position.set(10, 12, 14); scene.add(fillL);
+const heroLight = new THREE.PointLight(0xffd0a0, 26, 9, 1.6); scene.add(heroLight);
 
 /* ---------- 바닥 (절차적 텍스처) ---------- */
 function groundTex() {
   const c = document.createElement('canvas'); c.width = c.height = 1024; const x = c.getContext('2d');
-  x.fillStyle = '#1a1214'; x.fillRect(0, 0, 1024, 1024);
+  x.fillStyle = '#2a2023'; x.fillRect(0, 0, 1024, 1024);
   for (let i = 0; i < 9000; i++) { const g = 14 + Math.random() * 26; x.fillStyle = `rgba(${g + 8},${g},${g},${Math.random() * .5})`; const r = Math.random() * 14; x.fillRect(Math.random() * 1024, Math.random() * 1024, r, r); }
   x.strokeStyle = 'rgba(0,0,0,.55)'; x.lineWidth = 3;
   for (let i = 0; i < 70; i++) { x.beginPath(); let px = Math.random() * 1024, py = Math.random() * 1024; x.moveTo(px, py); for (let k = 0; k < 6; k++) { px += (Math.random() - .5) * 120; py += (Math.random() - .5) * 120; x.lineTo(px, py); } x.stroke(); }
@@ -158,8 +159,8 @@ function stylize(root, kind) {
     if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true;
     const n = o.name.toLowerCase(), old = o.material;
     const m = new THREE.MeshStandardMaterial({ map: old.map, roughness: .55, metalness: .35 });
-    if (kind === 'hero') { m.color.setRGB(.42, .36, .4); m.metalness = .7; m.roughness = .38; }
-    else { m.color.setRGB(.78, .72, .66); m.roughness = .75; }
+    if (kind === 'hero') { m.color.setRGB(.78, .7, .74); m.metalness = .55; m.roughness = .35; }
+    else { m.color.setRGB(.95, .9, .84); m.roughness = .7; }
     if (n.includes('eyes')) { m.emissive.set(0xff1020); m.emissiveIntensity = 6; m.color.set(0x000000); }
     o.material = m;
   });
@@ -198,7 +199,7 @@ function hitMob(m, dmg, crit, big) {
   m.p.addScaledVector(dir, big ? .9 : .35); blood(new THREE.Vector3(m.p.x, 1.1, m.p.z), crit || big ? 46 : 20, dir);
   popDmg(new THREE.Vector3(m.p.x, 2.4, m.p.z), dmg * (moonT > 0 ? 3 : 1), crit); SFX.slash(big ? 1.5 : crit ? 1.25 : 1, crit || big);
   hitStop = big ? .09 : crit ? .07 : .04; shake = Math.max(shake, big ? .55 : crit ? .35 : .16);
-  m.obj.traverse(o => { if (o.isMesh && !o.name.toLowerCase().includes('eyes')) { o.material.emissive.set(0xff4040); o.material.emissiveIntensity = 1.6; } });
+  m.obj.traverse(o => { if (o.isMesh && !o.name.toLowerCase().includes('eyes')) { o.material.emissive.set(0xff2a2a); o.material.emissiveIntensity = .55; } });
   if (m.hp <= 0) { m.dead = true; m.state = 'dead'; m.play(Math.random() < .5 ? 'Death_A' : 'Death_C_Skeletons', { once: true, fade: .08 }); m.deadT = 0; kills++; document.getElementById('kc').innerHTML = kills + '<small>KILL</small>'; SFX.death(); blood(new THREE.Vector3(m.p.x, .9, m.p.z), 60, dir); }
   else if (m.state !== 'atk') { m.play(Math.random() < .5 ? 'Hit_A' : 'Hit_B', { once: true, fade: .05 }); m.state = 'hit'; m.stun = .35; }
 }
@@ -219,7 +220,7 @@ document.getElementById('bCam').onclick = () => { camMode = (camMode + 1) % 3; }
 document.getElementById('bSnd').onclick = e => { const v = SFX.toggle(); e.currentTarget.classList.toggle('on', v); };
 
 /* ---------- 루프 ---------- */
-const clock = new THREE.Clock(); const camPos = new THREE.Vector3(8, 9, 10); let autoSk = 4, autoUlt = 14;
+const clock = new THREE.Clock(); const camPos = new THREE.Vector3(9, 11, 12); let autoSk = 4, autoUlt = 14;
 function loop() {
   requestAnimationFrame(loop);
   let dt = Math.min(.05, clock.getDelta()); const real = dt;
@@ -249,16 +250,17 @@ function loop() {
       for (const o of mobs) if (o !== m && !o.dead) { const dd = o.p.distanceTo(m.p); if (dd < 1.1) { tmpV.subVectors(m.p, o.p).setY(0).normalize(); m.p.addScaledVector(tmpV, (1.1 - dd) * .5); } }
     }
   }
-  if (moonT > 0) { moonT -= real; if (moonT <= 0) { bloom.strength = .85; scene.fog.color.set(0x12050a); moonL.intensity = 2.2; } }
+  if (moonT > 0) { moonT -= real; if (moonT <= 0) { bloom.strength = .7; scene.fog.color.set(0x12050a); moonL.intensity = 2.2; } }
   hero.mixer.update(dt); for (const m of mobs) m.mixer.update(dt);
   for (const s of swordGlow) s.material.emissiveIntensity = 1.8 + Math.sin(performance.now() / 180) * .6 + (moonT > 0 ? 2 : 0);
   for (const b of braziers) { b.ph += real * 9; const f = .85 + Math.sin(b.ph) * .1 + Math.sin(b.ph * 2.7) * .08; b.pl.intensity = 18 * f; b.fire.scale.set(f, 1.5 * f, f); }
   updParticles(dt, hero.p); updSlashes(dt);
   /* 카메라: 쿼터뷰 추적 + 흔들림 */
-  const off = camMode === 0 ? [7.5, 9, 9.5] : camMode === 1 ? [0, 5.5, 9] : [-6, 14, 6];
+  const off = camMode === 0 ? [9, 11, 12] : camMode === 1 ? [0, 6, 10.5] : [-8, 17, 8];
   camPos.lerp(tmpV.set(hero.p.x + off[0], off[1], hero.p.z + off[2]), 1 - Math.pow(.02, real));
   camera.position.copy(camPos); if (shake > 0) { camera.position.x += rng(-1, 1) * shake * .4; camera.position.y += rng(-1, 1) * shake * .3; shake = Math.max(0, shake - real * 2.2); }
   camera.lookAt(hero.p.x, 1.1, hero.p.z);
+  heroLight.position.set(hero.p.x + 1.5, 4, hero.p.z + 2.5);
   moonL.position.set(hero.p.x - 14, 22, hero.p.z - 18); moonL.target.position.set(hero.p.x, 0, hero.p.z);
   composer.render();
 }
