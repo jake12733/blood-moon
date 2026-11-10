@@ -247,7 +247,7 @@ body.bloodmoon #view::after{background:radial-gradient(ellipse at 50% 55%,rgba(1
     <button class="hud" id="bossBtn">⚔ 보스 재도전</button>
     <div class="hud" id="bot"><div class="bar hp"><i id="hpB"></i><span id="hpT">HP</span></div><div class="orb"><i id="orbB"></i><span id="orbT">0%<small>WAVE</small></span></div><div class="bar ex"><i id="exB"></i><span id="exT">EXP</span></div></div>
     <div class="hud" id="sk"></div>
-    <div class="hud" id="fx"><button class="mini" id="fxBtn" title="그래픽 효과">FX</button></div>
+    <div class="hud" id="fx"><button class="mini on" id="sndBtn" title="사운드 켜기/끄기">♪</button><button class="mini" id="fxBtn" title="그래픽 효과">FX</button></div>
     <div id="card"><div class="o" id="cardO"></div><div class="ln"></div><h2 id="cardH"></h2><div class="ln"></div><p id="cardS"></p></div>
     <div id="fade"></div>
     <div id="cutin"><div class="dim"></div><div class="band"></div><div class="ln2"></div><img class="por" alt=""><div class="nm"><small id="ciE"></small><b id="ciN"></b></div></div>
@@ -433,7 +433,7 @@ function freeSpot(minD,maxD){const cxw=hero.x*.6+1000*.4,cyw=hero.y*.6+1060*.4;f
 function spawnMob(){const r=Math.random(),type=r<.45?'ghoul':r<.8?'gargoyle':'brute',t=MT[type],ch=chapterOf(S.stage),[x,y]=freeSpot(380,620);
  const hp=monHp(S.stage)*t.hpM;mobs.push({type,x,y,hp,max:hp,boss:false,face:-1,spawn:0,hitT:0,atkT:rand(.5,1.5),lunge:0,dead:false,dt:0,bob:rand(0,9),name:t.names[ch%4],r:t.h*.24});
  for(let i=0;i<14;i++)parts.push({x:x+rand(-30,30),y:y+rand(-6,6),vx:rand(-20,20),vy:rand(-90,-30),life:rand(.6,1.1),t:0,r:rand(8,18),k:'smoke'})}
-function spawnBoss(){const ch=chapterOf(S.stage),[x,y]=freeSpot(330,420),hp=monHp(S.stage)*9;
+function spawnBoss(){SFX.roar();const ch=chapterOf(S.stage),[x,y]=freeSpot(330,420),hp=monHp(S.stage)*9;
  boss={type:'boss',x,y,hp,max:hp,boss:true,face:-1,spawn:0,hitT:0,atkT:1.5,lunge:0,dead:false,dt:0,bob:0,name:BOSSES[ch%4],r:70};mobs.push(boss);bossT=30;
  $('#bossN').textContent=boss.name;$('#boss').classList.add('on');
  for(let i=0;i<60;i++)parts.push({x:x+rand(-50,50),y:y+rand(-10,10),vx:rand(-40,40),vy:rand(-260,-60),life:rand(.8,1.6),t:0,r:rand(2,5),k:'blood',g:1});
@@ -441,6 +441,7 @@ function spawnBoss(){const ch=chapterOf(S.stage),[x,y]=freeSpot(330,420),hp=monH
 
 /* ========== 전투 ========== */
 function damage(m,dmg,kind){if(!m||m.dead)return;m.hp-=dmg;m.hitT=.12;
+ if(kind!=='fam'){const cl=S.cls,pw=kind==='skill'?1.5:kind==='crit'?1.25:1;if(cl==='carnage')SFX.bullet(pw);else if(cl==='viper')SFX.hex(pw);else SFX.slash(pw,kind==='crit'||kind==='skill')}
  if(kind!=='fam'){const a=Math.atan2(m.y-hero.y,m.x-hero.x),k=(kind==='crit'?1.6:kind==='skill'?1.35:1)*hitPow*(m.boss?.18:1);m.kvx=(m.kvx||0)+Math.cos(a)*190*k;m.kvy=(m.kvy||0)+Math.sin(a)*130*k;m.stun=Math.max(m.stun||0,(m.boss?.05:.14)*Math.min(2.2,k));m.stunMax=m.stun;
   if(!(m.bimp>0)){m.bimp=.06;const t0=MT[m.type];bloodImpact(m.x,m.y-t0.h*.5-(t0.fly?30:0),a,Math.min(1.8,.7*k),m.y)}
   if(kind==='crit'&&(S.cls==='blood'||S.cls==='akasha'))hs(.05)}
@@ -448,7 +449,7 @@ function damage(m,dmg,kind){if(!m||m.dead)return;m.hp-=dmg;m.hitT=.12;
  pop(m,dmg,kind);if(m.hp<=0)kill(m)}
 function pop(m,v,kind){const t=MT[m.type];if(pops.length>60)pops.shift();pops.push({x:m.x+rand(-24,24),y:m.y-t.h*(t.fly?1.2:.95)+rand(-10,10),v,kind,t:0,life:kind==='crit'||kind==='skill'?1.1:.8})}
 function bleed(m,n){if(S.lowfx)n=Math.ceil(n/3);const t=MT[m.type],y0=m.y-t.h*.5-(t.fly?30:0);for(let i=0;i<n;i++){const a=rand(0,TAU),s=rand(60,260);parts.push({x:m.x+rand(-10,10),y:y0+rand(-15,15),vx:Math.cos(a)*s,vy:Math.sin(a)*s-120,life:rand(.35,.8),t:0,r:rand(1.5,4),k:'blood',g:1,gy:m.y})}}
-function kill(m){m.dead=true;m.dt=0;const t=MT[m.type];
+function kill(m){m.dead=true;m.dt=0;const t=MT[m.type];SFX.death(m.boss);setTimeout(()=>SFX.coin(),140);
  for(let i=0;i<(m.boss?4:1);i++)addDecal(m.x+rand(-30,30),m.y+rand(-12,12),rand(.45,.8)*(m.boss?1.6:1));
  const n=S.lowfx?20:(m.boss?140:46);for(let i=0;i<n;i++)parts.push({x:m.x+rand(-t.h*.25,t.h*.25),y:m.y-rand(0,t.h*.9)-(t.fly?30:0),vx:rand(-50,50),vy:rand(-160,-40),life:rand(.6,1.3),t:0,r:rand(1.5,4.5),k:Math.random()<.55?'ash':'ember'});
  const g=goldDrop(S.stage)*(m.boss?12:1)*(m.type==='brute'?1.4:1);S.gold+=g;spawnCoins(m,m.boss?14:3);
@@ -472,7 +473,7 @@ function camKick(ang,pw){kickX+=Math.cos(ang)*pw*7;kickY+=Math.sin(ang)*pw*5;sha
 function heroMove(tx,ty,dur){const h=hero;h.act=null;h.mv={sx:h.x,sy:h.y,tx:clamp(tx,EDGE,WORLD-EDGE),ty:clamp(ty,EDGE,WORLD-EDGE),t:0,dur}}
 function lungeTo(tg,ang,maxD,stop=48){const d=tg?Math.hypot(tg.x-hero.x,tg.y-hero.y):maxD+stop;return clamp(d-stop,0,maxD)}
 // 혈흔 검기 트레일: 영웅에 붙어 따라다니는 리본
-function bladeTrail(o){btr.push({t:-(o.delay||0),dur:o.dur||.14,lag:o.lag||.1,a0:o.a0,a1:o.a1,r:o.r||120,th:o.th||46,tilt:o.tilt??.55,yo:o.yo??62,col:o.col||'255,30,50',fx:o.fx||0,fy:o.fy||0})}
+function bladeTrail(o){SFX.whoosh(Math.min(1.6,(o.th||46)/46),Math.max(0,o.delay||0));btr.push({t:-(o.delay||0),dur:o.dur||.14,lag:o.lag||.1,a0:o.a0,a1:o.a1,r:o.r||120,th:o.th||46,tilt:o.tilt??.55,yo:o.yo??62,col:o.col||'255,30,50',fx:o.fx||0,fy:o.fy||0})}
 function updBlades(dt){for(const b of btr){b.t+=dt;if(b.t>0&&b.t<b.dur&&!S.lowfx){const u=eOut(clamp(b.t/b.dur,0,1)),a=b.a0+(b.a1-b.a0)*u,dir=Math.sign(b.a1-b.a0)||1;const px=hero.x+b.fx+Math.cos(a)*b.r,py=hero.y-b.yo-hero.yo*0+b.fy+Math.sin(a)*b.r*b.tilt;for(let k=0;k<2;k++)parts.push({x:px,y:py,vx:-Math.sin(a)*dir*rand(220,420)+rand(-40,40),vy:Math.cos(a)*dir*rand(120,260)*b.tilt-rand(60,160),life:rand(.4,.8),t:0,r:rand(1.6,3.4),k:'blood',g:1,gy:hero.y+rand(-10,30)})}}for(let i=btr.length-1;i>=0;i--)if(btr[i].t>btr[i].dur+btr[i].lag+.05)btr.splice(i,1)}
 function drawBlades(){for(const b of btr){if(b.t<=0)continue;const uh=eOut(clamp(b.t/b.dur,0,1)),ut=eOut(clamp((b.t-b.lag)/b.dur,0,1)),ah=b.a0+(b.a1-b.a0)*uh,at=b.a0+(b.a1-b.a0)*Math.max(0,ut-.02);if(Math.abs(ah-at)<.02)continue;
  const al=b.t>b.dur?Math.max(0,1-(b.t-b.dur)/(b.lag+.05)):1,N=26;cx.save();cx.translate(hero.x+b.fx,hero.y-b.yo-(hero.yo||0)+b.fy);cx.scale(1,b.tilt);
@@ -496,7 +497,7 @@ function hitArea(x0,y0,rad,f,kind='hit',o={}){let n=0;for(const m of mobs){if(m.
  const crit=Math.random()<critOf(L('crit'));damage(m,atk()*f*(crit?cdmgOf(L('cdmg')):1),crit?'crit':kind);if(crit&&flashA<.1)flashScr('rgba(255,240,210,.1)');if(o.air)m.air=.6;n++}return n}
 function segHit(x1,y1,x2,y2,w,f){const dx0=x2-x1,dy0=y2-y1,l2=dx0*dx0+dy0*dy0;let n=0;for(const m of mobs){if(m.dead)continue;const my=m.y-50;let t=((m.x-x1)*dx0+(my-y1)*dy0)/l2;t=clamp(t,0,1);const d=Math.hypot(x1+dx0*t-m.x,y1+dy0*t-my);if(d<w+m.r*.4){const crit=Math.random()<critOf(L('crit'));damage(m,atk()*f*(crit?cdmgOf(L('cdmg')):1),crit?'crit':'skill');n++}}return n}
 const angTo=tg=>Math.atan2(tg.y-hero.y,tg.x-hero.x);
-function startAttack(tg,d){const C=CH(),a=angTo(tg),h=hero;h.face=Math.cos(a)>=0?1:-1;h.combo++;
+function startAttack(tg,d){const C=CH(),a=angTo(tg),h=hero;if(C.id==='carnage')SFX.shot(1);else if(C.id==='viper')SFX.hex(.7);h.face=Math.cos(a)>=0?1:-1;h.combo++;
  if(C.id==='blood'){const st=(h.combo-1)%3,s=st===0?1:-1;
   if(st<2){h.act={k:'b',st,t:0,dur:.38,hits:[.15],ang:a,tg,sx:h.x,sy:h.y,lg:lungeTo(tg,a,52,58)};bladeTrail({a0:a-1.7*s,a1:a+1.5*s,r:118,th:54,dur:.12,lag:.11,delay:.04,col:C.col,fx:Math.cos(a)*14})}
   else{const L2=lungeTo(tg,a,140,40);h.act={k:'b',st:2,t:0,dur:.78,hits:[.2,.34,.54],ang:a,tg,sx:h.x,sy:h.y,tx:h.x+Math.cos(a)*L2,ty:h.y+Math.sin(a)*L2};bladeTrail({a0:a,a1:a+TAU*1.5*h.face,r:126,th:50,dur:.44,lag:.16,delay:.02,col:C.col,yo:56});bladeTrail({a0:a-1.9*h.face,a1:a+1.2*h.face,r:150,th:70,dur:.1,lag:.13,delay:.47,col:C.col,tilt:.95,yo:88})}}
@@ -541,7 +542,7 @@ function updAct(dt){const h=hero,a=h.act;a.t+=dt;const p=clamp(a.t/a.dur,0,1);
  a.fired=a.fired||[];a.hits.forEach((ht,i)=>{if(!a.fired[i]&&a.t>=ht){a.fired[i]=1;fireHit(a,i)}});
  if((a.k==='dash'||(a.k==='b'&&a.st===2&&a.t<a.hits[2])||(a.lg>20&&a.t<a.hits[0])||a.k==='hop')&&(h.trailT-=dt)<=0){h.trailT=.025;h.trail.push({x:h.x,y:h.y,f:h.face,a:.55,yo:h.yo||0});if(h.trail.length>9)h.trail.shift()}
  if(a.t>=a.dur){h.act=null;if(a.k==='dash')atkTimer=99}}
-function heroHurt(v){hero.hp-=v;hero.hitT=.15;if(hero.hp<=0){hero.hp=hero.max;flashScr('rgba(255,0,30,.5)');if(boss){failBoss()}}}
+function heroHurt(v){SFX.hurt();hero.hp-=v;hero.hitT=.15;if(hero.hp<=0){hero.hp=hero.max;flashScr('rgba(255,0,30,.5)');if(boss){failBoss()}}}
 function failBoss(){bossFail=true;S.kills=0;if(boss){boss.dead=true;boss.dt=.5;boss=null}$('#boss').classList.remove('on');showCard('사냥 실패','보스가 아직 강하다','강화 후 다시 도전하세요',2400);renderHud()}
 function tap(e){const r=cv.getBoundingClientRect(),[wx,wy]=toW(e.clientX-r.left,e.clientY-r.top);const m=nearest(wx,wy,260)||nearest(hero.x,hero.y);if(!m)return;
  const t=MT[m.type];damage(m,atk()/dmgMul()*tapOf(L('tap'))*dmgMul(),'tap');for(let i=0;i<3;i++)slashes.push({x:m.x+(i-1)*16,y:m.y-t.h*.55-(t.fly?30:0),a:-1.1,dir:1,t:0,life:.16,r:40,claw:1})}
@@ -563,9 +564,9 @@ function drawFx(){cx.globalCompositeOperation='lighter';for(const e of sfx){if(e
 function updFx(dt){if(!isFinite(hero.x)||!isFinite(hero.y)){hero.x=WORLD/2;hero.y=WORLD/2}for(const e of sfx){e.t+=dt;if(e.t>=e.life&&!e.done){e.done=1;e.onEnd&&e.onEnd(e)}if(e.mode==='summon'&&e.t>0){e.tick=(e.tick||0)-dt;if(e.tick<=0){e.tick=.7;const m=nearest(e.cx2||hero.x,e.cy2||hero.y,700);if(m){const sx0=e.cx2||hero.x,sy0=(e.cy2||hero.y)-90;tracers.push({x1:sx0,y1:sy0,x2:m.x,y2:m.y-50,t:0,life:.2,w:8,col:'170,90,255'});fx('ba-viper-hit',m.x,m.y-50,190,{life:.35});hitArea(m.x,m.y,110,4,'skill')}}}}
  for(let i=sfx.length-1;i>=0;i--)if(sfx[i].done)sfx.splice(i,1);
  for(const tm of timers)tm.t-=dt;for(let i=timers.length-1;i>=0;i--)if(timers[i].t<=0){const f=timers[i].f;timers.splice(i,1);f()}}
-function cutin(name,en,col){const el=$('#cutin');el.style.setProperty('--c',col);el.querySelector('.por').src=CH().file+'.webp';$('#ciN').textContent=name;$('#ciE').textContent=en;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(cutin.t);cutin.t=setTimeout(()=>el.classList.remove('on'),1550)}
+function cutin(name,en,col){SFX.ult();const el=$('#cutin');el.style.setProperty('--c',col);el.querySelector('.por').src=CH().file+'.webp';$('#ciN').textContent=name;$('#ciE').textContent=en;el.classList.remove('on');void el.offsetWidth;el.classList.add('on');clearTimeout(cutin.t);cutin.t=setTimeout(()=>el.classList.remove('on'),1550)}
 function skBanner(name,en,col){const el=$('#skname');el.style.setProperty('--c',col);el.innerHTML=`<small>${en}</small>${name}`;el.classList.remove('on');void el.offsetWidth;el.classList.add('on')}
-function castK(n){const C=CH(),cl=C.id,sk=CSK[cl][n-1],key='k'+n;if(!kOk(n)||(S.cds[key]||0)>0)return false;const tg=nearest(hero.x,hero.y,900);if(!tg&&n!==3)return false;
+function castK(n){const C=CH(),cl=C.id,sk=CSK[cl][n-1],key='k'+n;if(!kOk(n)||(S.cds[key]||0)>0)return false;const tg=nearest(hero.x,hero.y,900);if(!tg&&n!==3)return false;SFX.cast(n);
  const a=tg?Math.atan2(tg.y-hero.y,tg.x-hero.x):(hero.face>0?0:Math.PI);hero.face=Math.cos(a)>=0?1:-1;const K='sk-'+cl+'-'+n,GC=GRC[n],hx=hero.x,hy=hero.y,tx=tg?tg.x:hx,ty=tg?tg.y:hy;
  S.cds[key]=sk.cd;S.casts=(S.casts||0)+1;skGap=.9;
  {const ca=Math.cos(a),sa=Math.sin(a)*.75,MD={blood:[1,3,5],akasha:[1,2,3,5]}[cl]||[],SELF={blood:[2,4,6],akasha:[4,6],carnage:[5]}[cl]||[];
@@ -664,6 +665,50 @@ function selectCls(id,gr){if(id)S.cls=id;if(gr)S.grade=gr;const C=CH();hero.trai
  for(let i=0;i<50;i++){const a=rand(0,TAU),v=rand(60,260);parts.push({x:hero.x+Math.cos(a)*20,y:hero.y-80+Math.sin(a)*20,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,life:rand(.5,1),t:0,r:rand(2,4),k:'ember'})}impact(hero.x,hero.y-70,C.col,1.6);flashScr(`rgba(${C.col},.3)`);showCard(`${GR[C.g].n} · ${C.en}`,C.name,C.combo,2200)}
 function modal(h){$('#mbox').innerHTML=h;$('#modal').classList.add('on')}
 
+
+/* ========== 사운드 (Web Audio로 직접 합성한 오리지널 효과음) ========== */
+const SFX = (() => {
+  let ac = null, master = null, comp = null, noise = null, on = (() => { try { return localStorage.getItem('bloodmoon-sound') !== 'off'; } catch { return true; } })();
+  const last = {};
+  function init() {
+    if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+    ac = new C(); comp = ac.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 5; comp.attack.value = .003; comp.release.value = .2;
+    master = ac.createGain(); master.gain.value = on ? .55 : 0; master.connect(comp); comp.connect(ac.destination);
+    noise = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate); const d = noise.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const ok = (k, gap) => { if (!ac || !on) return false; const t = ac.currentTime; if (last[k] && t - last[k] < gap) return false; last[k] = t; return true; };
+  const env = (g, t, a, peak, dec) => { g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(peak, t + a); g.gain.exponentialRampToValueAtTime(0.0001, t + a + dec); };
+  const out = (pan) => { const g = ac.createGain(); if (ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = pan || 0; g.connect(p); p.connect(master); } else g.connect(master); return g; };
+  function nz(t, dur, type, f0, f1, q, peak, a, pan) { const s = ac.createBufferSource(); s.buffer = noise; s.playbackRate.value = rnd(.9, 1.1); const f = ac.createBiquadFilter(); f.type = type; f.Q.value = q; f.frequency.setValueAtTime(f0, t); if (f1) f.frequency.exponentialRampToValueAtTime(f1, t + dur); const g = out(pan); env(g, t, a, peak, dur); s.connect(f); f.connect(g); s.start(t, rnd(0, 1.5)); s.stop(t + a + dur + .05); }
+  function osc(t, type, f0, f1, dur, peak, a, pan) { const o = ac.createOscillator(); o.type = type; o.frequency.setValueAtTime(f0, t); if (f1) o.frequency.exponentialRampToValueAtTime(f1, t + dur); const g = out(pan); env(g, t, a, peak, dur); o.connect(g); o.start(t); o.stop(t + a + dur + .05); }
+  const rnd = (a, b) => a + Math.random() * (b - a);
+  return {
+    init, get on() { return on; },
+    toggle() { on = !on; try { localStorage.setItem('bloodmoon-sound', on ? 'on' : 'off'); } catch { } if (master) master.gain.value = on ? .55 : 0; if (on) init(); return on; },
+    /* 칼 휘두르는 바람 소리 */
+    whoosh(p = 1, delay = 0) { if (!ok('wh', .045)) return; const t = ac.currentTime + delay, pan = rnd(-.3, .3); nz(t, .16 + .1 * p, 'bandpass', 500, 2600 + 600 * p, 1.4, .32 * p, .03, pan); nz(t + .02, .12, 'highpass', 3000, 6000, .7, .08 * p, .01, pan); },
+    /* 베기 타격: 살을 가르는 소리 + 묵직한 충격, 치명타는 금속성 울림 */
+    slash(p = 1, crit) { if (!ok('sl', .035)) return; const t = ac.currentTime, pan = rnd(-.25, .25); nz(t, .09, 'bandpass', 1800, 700, 2.2, .5 * p, .002, pan); nz(t, .22, 'lowpass', 900, 200, 1, .35 * p, .003, pan); osc(t, 'sine', 150, 45, .16 + .06 * p, .55 * p, .002, pan); if (crit) { osc(t, 'triangle', 1850, 1700, .35, .1, .002, pan); osc(t, 'triangle', 2470, 2300, .3, .07, .002, -pan); nz(t, .3, 'bandpass', 4200, 2500, 6, .12, .002, pan); osc(t, 'sine', 70, 38, .3, .5, .003, 0); } },
+    /* 총격 */
+    shot(p = 1) { if (!ok('sh', .04)) return; const t = ac.currentTime, pan = rnd(-.2, .2); nz(t, .12, 'highpass', 1200, 500, .8, .6 * p, .001, pan); nz(t, .3, 'lowpass', 1600, 180, .9, .35 * p, .002, pan); osc(t, 'sine', 120, 40, .18, .6 * p, .001, pan); },
+    bullet(p = 1) { if (!ok('bu', .03)) return; const t = ac.currentTime; nz(t, .06, 'bandpass', 2600, 900, 3, .3 * p, .001, rnd(-.3, .3)); osc(t, 'square', 210, 90, .05, .08, .001, 0); },
+    /* 저주·마법 타격 */
+    hex(p = 1) { if (!ok('hx', .05)) return; const t = ac.currentTime, pan = rnd(-.3, .3); osc(t, 'sine', 380, 140, .3, .22 * p, .01, pan); osc(t, 'triangle', 760, 260, .25, .08 * p, .01, -pan); nz(t, .28, 'bandpass', 900, 300, 4, .18 * p, .01, pan); },
+    /* 처치: 피가 터지는 소리 + 재로 흩어짐 */
+    death(boss) { if (!ok('de', .06)) return; const t = ac.currentTime; nz(t, .28, 'bandpass', 600, 180, 1.6, .35, .004, rnd(-.3, .3)); nz(t + .05, .5, 'highpass', 2500, 5000, .5, .05, .1, 0); if (boss) { osc(t, 'sine', 90, 28, 1.2, .7, .01, 0); nz(t, 1.2, 'lowpass', 500, 80, .8, .4, .02, 0); } },
+    coin() { if (!ok('co', .08)) return; const t = ac.currentTime; osc(t, 'sine', 1900, 1900, .09, .06, .002, .2); osc(t + .05, 'sine', 2800, 2800, .12, .05, .002, -.2); },
+    /* 스킬 시전: 등급이 높을수록 크고 깊게 */
+    cast(g = 1) { if (!ok('ca', .1)) return; const t = ac.currentTime, k = .6 + g * .12; nz(t, .35 + g * .05, 'bandpass', 300, 3200, 1.2, .3 * k, .05, 0); osc(t, 'sawtooth', 55, 110, .4, .12 * k, .02, 0); osc(t + .12, 'sine', 70, 30, .5 + g * .08, .6 * k, .005, 0); nz(t + .12, .5 + g * .08, 'lowpass', 1400, 120, .9, .45 * k, .004, 0); },
+    /* 궁극기 컷인: 빨려 들어가는 소리 뒤 강타 */
+    ult() { if (!ok('ul', .5)) return; const t = ac.currentTime; nz(t, .6, 'bandpass', 200, 4000, 1.5, .25, .55, 0); osc(t, 'sawtooth', 40, 120, .6, .15, .5, 0); const h = t + .62; osc(h, 'sine', 80, 25, 1.4, .9, .004, 0); nz(h, 1.2, 'lowpass', 2200, 90, .8, .6, .004, 0); [220, 261.6, 311.1].forEach((f, i) => osc(h, 'triangle', f, f * .98, 1.6, .05, .08, i - 1)); },
+    /* 보스 등장 포효 */
+    roar() { if (!ok('ro', 1)) return; const t = ac.currentTime; const o = ac.createOscillator(), f = ac.createBiquadFilter(), g = out(0), lfo = ac.createOscillator(), lg = ac.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(48, t + 1.4); lfo.frequency.value = 22; lg.gain.value = 14; lfo.connect(lg); lg.connect(o.frequency); f.type = 'lowpass'; f.frequency.value = 700; env(g, t, .15, .45, 1.3); o.connect(f); f.connect(g); o.start(t); lfo.start(t); o.stop(t + 1.6); lfo.stop(t + 1.6); nz(t, 1.3, 'bandpass', 400, 160, 1.2, .35, .1, 0); },
+    hurt() { if (!ok('hu', .25)) return; const t = ac.currentTime; osc(t, 'sine', 200, 80, .15, .25, .002, 0); nz(t, .1, 'lowpass', 1200, 300, 1, .2, .002, 0); },
+  };
+})();
+['pointerdown', 'keydown', 'touchstart'].forEach(ev => addEventListener(ev, () => SFX.init(), { passive: true }));
+setTimeout(() => { const b = document.getElementById('sndBtn'); if (b) { b.classList.toggle('on', SFX.on); b.textContent = SFX.on ? '♪' : '×'; } }, 0);
 /* ========== 이벤트 ========== */
 cv.addEventListener('pointerdown',tap);
 $('#quest').addEventListener('click',claimQuest);
@@ -678,6 +723,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button');if(!t)r
  if(t.dataset.use)return useSkill(t.dataset.use);
  if(t.id==='autoBtn'||t.id==='autoToggle'){S.auto=!S.auto;renderSkills();if(tab==='skill')renderList();return}
  if(t.id==='bossBtn'){bossFail=false;S.kills=9;spawnBoss();renderHud();return}
+ if(t.id==='sndBtn'){const v=SFX.toggle();t.classList.toggle('on',v);t.textContent=v?'♪':'×';return}
  if(t.id==='fxBtn'||t.id==='fxToggle'){S.lowfx=!S.lowfx;$('#fxBtn').classList.toggle('on',!S.lowfx);if(tab==='reb')renderList();return}
  if(t.dataset.reb!==undefined){const g=soulGain();if(!g)return;modal(`<div class="o">피 의 &nbsp;계 약</div><h2>환생하시겠어요?</h2><p>최고 단계 ${S.maxStage}까지의 사냥을 바치고<br>혈정을 얻어 더 강해져서 돌아와요.</p><div class="big">+${fmt(g)} 혈정</div><button class="buy" data-rebok>계약하기</button><button class="buy" data-close style="background:none;border-color:rgba(255,255,255,.15);margin-top:8px">취소</button>`);return}
  if(t.dataset.rebok!==undefined){const g=soulGain();S={...structuredClone(DEF),soul:S.soul+g,rebirths:S.rebirths+1,auto:S.auto,lowfx:S.lowfx,totalKills:S.totalKills,q:S.q,casts:S.casts};$('#modal').classList.remove('on');mobs=[];boss=null;bossFail=false;mapIdx=0;decals.length=0;hero.max=heroMax();hero.hp=hero.max;$('#boss').classList.remove('on');renderHud();renderList();renderSkills();save();showCard('환생','피의 계약이 맺어졌다',`혈정 ${fmt(S.soul)} · 모든 힘 ×${soulMul().toFixed(1)}`,3200);return}
