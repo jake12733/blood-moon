@@ -261,6 +261,7 @@ body.bloodmoon #view::after{background:radial-gradient(ellipse at 50% 55%,rgba(1
 <div id="title"><div class="tbg"></div><img class="th" src="td-hero.webp" alt=""><div class="tt"><div class="o">BLOOD MOON HUNTER</div><h1>혈월의 사냥꾼</h1><p>피의 달 아래, 사냥은 끝나지 않는다</p></div><div class="go">화면을 눌러 사냥 시작</div></div>
 <div id="modal"><div id="mbox"></div></div>
 
+<script src="rig.js"></script>
 <script>
 'use strict';
 /* ========== 유틸 ========== */
@@ -518,8 +519,8 @@ function startAttack(tg,d){const C=CH(),a=angTo(tg),h=hero;if(C.id==='carnage')S
   else h.act={k:'c',t:0,dur:h.combo%6===0?.3:.12,hits:[0],ang:a,tg,snipe:h.combo%6===0}}
  else if(C.id==='viper'){h.act={k:'v',t:0,dur:.44,hits:[.24],ang:a,tg,vortex:h.combo%3===0,sx:h.x,sy:h.y,lg:lungeTo(tg,a,16,120)}}
  if(C.moon&&h.combo%3===0)strikes.push({x:tg.x,y:tg.y,t:0,life:.9,hit:false,dmg:atk()*2.5})}
-function muzzle(){const C=CH();return[hero.x+hero.face*C.h*.46,hero.y-C.h*.78]}
-function handPos(){const C=CH();return[hero.x+hero.face*C.h*.36,hero.y-C.h*.86]}
+function muzzle(){if(hero._rigOn&&hero._tipA)return hero._tipA.slice();const C=CH();return[hero.x+hero.face*C.h*.46,hero.y-C.h*.78]}
+function handPos(){if(hero._rigOn&&(hero._tipA||hero._handA))return (hero._tipA||hero._handA).slice();const C=CH();return[hero.x+hero.face*C.h*.36,hero.y-C.h*.86]}
 function fireHit(a,i){const C=CH(),h=hero;
  if(a.k==='chain'){const n=a.ts.length;if(i<n){const t=a.ts[i];if(!t)return;h.trail.push({x:h.x,y:h.y,f:h.face,a:.7,yo:0});const ang=rand(0,TAU);h.x=clamp(t.x-Math.cos(ang)*55,EDGE,WORLD-EDGE);h.y=clamp(t.y-Math.sin(ang)*35,EDGE,WORLD-EDGE);h.face=t.x>=h.x?1:-1;tracers.push({x1:h.trail[h.trail.length-1].x,y1:h.trail[h.trail.length-1].y-60,x2:h.x,y2:h.y-60,t:0,life:.18,w:6,col:C.col});
    mkArc(t.x,t.y-62,ang,72,1,C.col,{th:24,span:2,tilt:.8,life:.22,noEcho:1});mkArc(t.x,t.y-62,ang+Math.PI/2,72,-1,C.col,{th:24,span:2,tilt:.8,life:.22});if(!t.dead){const crit=Math.random()<critOf(L('crit'));damage(t,atk()*5*(crit?cdmgOf(L('cdmg')):1),'skill')}impact(t.x,t.y-60,C.col,1);hs(.03)}
@@ -972,6 +973,76 @@ function drawArc(s){if(s.t<0)return;const p=s.t/s.life,rev=Math.min(1,p*3.4),fad
  cx.fillStyle=`rgba(${s.col},${fade*.45})`;arcPath(s,tail,a1,1.6);cx.fill();
  cx.shadowBlur=0;cx.fillStyle=`rgba(${s.col},${fade*.9})`;arcPath(s,tail,a1,1);cx.fill();
  cx.fillStyle=`rgba(255,248,240,${fade})`;arcPath(s,tail,a1,.38);cx.fill();cx.restore()}
+
+/* ===== 뼈대 애니메이션 (rig.js): 그림은 그대로, 팔·다리·무기·망토를 따로 움직임 ===== */
+const RL=(a,b,t)=>a+(b-a)*t;
+function heroRig(img,C,h,a,x,y,HH,rot,sx,sy,smear){
+ const r=RIG.getRig(C.img,img);if(!r){h._rigOn=false;return false}
+ const kind=r.kind,P={},ad=(k,v)=>{P[k]=(P[k]||0)+v},RA=r.restWA,RB=r.restWB;
+ const TW=(g,k,s)=>{if(r.hasWA)RIG.weaponTo(P,r,'A',g,k==null?1:k,s==null?.22:s)},TB=(g,k,s)=>{if(r.hasWB)RIG.weaponTo(P,r,'B',g,k==null?1:k,s==null?.25:s)};
+ if(a){const p=clamp(a.t/a.dur,0,1),hp=clamp((a.hits[0]??0)/a.dur,.05,.95);
+  if(a.k==='b'&&a.st<2){RIG.idle(P,h.t,kind);
+   /* 대검: 머리 뒤로 들어 올림 → 앞아래로 내려벰 → 스프링으로 정지 (반대 방향 베기는 거꾸로) */
+   const s=a.st===0?1:-1,w1=hp*.62,W=s>0?-2.15:1.75,K=s>0?1.05:-1.9;let g,sp,lg;
+   if(p<w1){const k=eInQ(p/w1);g=RL(RA,W,k);sp=(s>0?-.15:.1)*k;lg=-.06*k}
+   else if(p<hp){const k=eOutX((p-w1)/(hp-w1));g=RL(W,K,k);sp=RL(s>0?-.15:.1,s>0?.22:-.14,k);lg=RL(-.06,-.34,k)}
+   else{const k=(p-hp)/(1-hp),q=springK(k);g=RA+(K-RA)*q;sp=(s>0?.22:-.14)*q;lg=-.34*q}
+   TW(g,1,.22);ad('sp',sp);ad('hd',-sp*.45);ad('tR',lg);ad('sR',-lg*.5);ad('tL',-lg*.35);ad('aB',(P.aA||0)*.6)}
+  else if(a.k==='b'){const t1=a.hits[1]+.12,t2=a.hits[2];
+   if(a.t<t1){RIG.idle(P,h.t,kind);TW(.05,Math.min(1,a.t/.08),.3);ad('sp',.08);ad('sL',.25);ad('sR',.25);ad('tL',.1);ad('tR',-.12)}
+   else if(a.t<t2){const q=(a.t-t1)/(t2-t1);
+    if(q<.6){const e=eOutX(q/.6);TW(RL(.05,-2.3,e),1,.25);ad('sp',-.2*e);ad('hd',-.1*e);ad('tL',-.35*e);ad('sL',.75*e);ad('tR',-.15*e);ad('sR',.6*e)}
+    else{const e=eOutX((q-.6)/.4);TW(RL(-2.3,1.25,e),1,.28);ad('sp',RL(-.2,.32,e));ad('hd',RL(-.1,.1,e));ad('tL',-.35*(1-e));ad('sL',.75*(1-e));ad('tR',-.15*(1-e)-.2*e);ad('sR',.6*(1-e)+.2*e)}}
+   else{const k=clamp((a.t-t2)/(a.dur-t2),0,1),e=1-k,q=springK(k);TW(RA+(1.25-RA)*q,1,.28);ad('sp',.32*q);ad('sL',.55*e*e);ad('sR',.55*e*e);ad('tL',-.18*e);ad('tR',-.26*e)}}
+  else if(a.k==='dash'){RIG.run(P,Math.PI*.5,kind,1.2);ad('sp',.16);TW(2.45,1,.2);TB(2.7,1,.2)}
+  else if(a.k==='a'){RIG.idle(P,h.t,kind);
+   if(a.st<4){/* 톤파 칼날: 좌우 번갈아 크게 벰 */
+    const s=a.st%2?-1:1,useB=s<0&&r.hasWB,w1=hp*.5,R=useB?RB:RA,W=useB?2.95:-1.25,K=useB?.2:1.35;let g,sp,lg;
+    if(p<w1){const k=eInQ(p/w1);g=RL(R,W,k);sp=-.12*k;lg=-.05*k}
+    else if(p<hp){const k=eOutX((p-w1)/(hp-w1));g=RL(W,K,k);sp=RL(-.12,.22,k);lg=RL(-.05,-.28,k)}
+    else{const k=(p-hp)/(1-hp),q=springK(k);g=R+(K-R)*q;sp=.22*q;lg=-.28*q}
+    if(useB)TB(g,1,.28);else TW(g,1,.28);ad('sp',sp);ad('hd',-sp*.4);if(s>0){ad('tR',lg);ad('sR',-lg*.4)}else{ad('tL',lg);ad('sL',-lg*.4)}}
+   else{const e=Math.sin(p*Math.PI),k=eOutX(Math.min(1,p/hp));TW(RL(RA,-1.75,k),1,.3);TB(RL(RB,-2,k),1,.3);ad('sp',-.22*e);ad('hd',-.12*e);ad('tL',-.3*e);ad('sL',.6*e);ad('tR',-.12*e);ad('sR',.5*e)}}
+  else if(a.k==='chain'){RIG.run(P,Math.PI*.5,kind,1.1);ad('sp',.2);TW(.1,1,.3);TB(3,1,.3)}
+  else if(a.k==='spin'){RIG.idle(P,h.t,kind);TW(0,1,.35);TB(Math.PI,1,.35);ad('sL',.2);ad('sR',.2)}
+  else if(a.k==='hop'){RIG.idle(P,h.t,kind);const e=Math.sin(p*Math.PI);ad('tL',-.4*e);ad('sL',.8*e);ad('tR',-.22*e);ad('sR',.7*e);ad('sp',-.16*e);ad('hd',-.08*e)}
+  else if(a.k==='v'){RIG.idle(P,h.t,kind);const t0=a.hits[0];
+   /* 바이퍼: 두 손을 끌어올려 모았다가 앞으로 내지름 */
+   if(a.t<t0){const k=eInQ(a.t/t0);ad('aA',-.55*k);ad('fA',-.25*k);ad('aB',-.42*k);ad('fB',-.3*k);ad('sp',-.1*k);ad('hd',-.07*k)}
+   else{const q=clamp((a.t-t0)/(a.dur-t0),0,1),th=eOutX(Math.min(1,q/.22)),fd=1-q*q*(3-2*q);ad('aA',RL(-.55,.3,th)*fd);ad('fA',RL(-.25,.08,th)*fd);ad('aB',RL(-.42,.22,th)*fd);ad('fB',RL(-.3,-.05,th)*fd);ad('sp',RL(-.1,.17,th)*fd);ad('hd',RL(-.07,.05,th)*fd)}}
+  else RIG.idle(P,h.t,kind);
+ } else if(h.state==='run')RIG.run(P,h.t*12,kind,1);
+ else RIG.idle(P,h.t,kind);
+ /* 카니지: 총구가 늘 표적을 겨누고, 쏠 때 팔이 튀어 오름 */
+ if(kind==='gun'){const tg=a&&a.tg&&!a.tg.dead?a.tg:h.tgt&&!h.tgt.dead?h.tgt:null;
+  if(tg&&MT[tg.type]){const dxl=(tg.x-x)*h.face,dyl=(tg.y-MT[tg.type].h*.5)-(y-HH*.7);TW(clamp(Math.atan2(dyl,Math.max(30,dxl)),-.7,.75),a?1:.5,.75)}
+  if(h.recoil>0){const k=Math.pow(h.recoil/.3,2);ad('aA',-.3*k);ad('wA',-.12*k);ad('sp',-.1*k);ad('hd',-.06*k)}}
+ if(h.hitT>0)RIG.hit(P,clamp(h.hitT/.15,0,1));
+ if(!RIG.draw(cx,h,C.img,img,P,x,y,HH,h.face,{rot,sx,sy,noBlit:true})){h._rigOn=false;return false}
+ h._rigOn=true;
+ const zs=cx.getTransform().a;
+ if(smear>0&&!S.lowfx){for(let i=3;i>=1;i--)RIG.blit(cx,-Math.cos(a?a.ang:0)*i*7*smear*zs,0,{a:.2*smear*(1-i*.22),f:`brightness(.9) sepia(1) saturate(8) hue-rotate(${C.hue}deg)`,op:'lighter'})}
+ RIG.blit(cx,0,0,{f:h.hitT>0?'brightness(1.8) saturate(.4)':null});
+ if(h.flashT>0)RIG.blit(cx,0,0,{a:h.flashT/.08*.35,f:`brightness(1.6) sepia(1) saturate(5) hue-rotate(${C.hue}deg)`,op:'lighter'});
+ if(buff.frenzy>0)RIG.blit(cx,0,0,{a:.16+Math.sin(T*14)*.05,f:'sepia(1) saturate(8) hue-rotate(-45deg) brightness(.9)',op:'lighter'});
+ if(smear>.6&&!S.lowfx&&h._tipA){cx.globalCompositeOperation='lighter';glow(h._tipA[0],h._tipA[1],26+30*smear,'rgba(255,240,230,A)',.5*smear);cx.globalCompositeOperation='source-over'}
+ return true;
+}
+function mobRig(m,t,img,x,y,rot,sy,a){
+ const key='td-'+t.img;if(!RIG.has(key))return false;const r=RIG.getRig(key,img);if(!r)return false;
+ const P={},kind=r.kind,ad=(k,v)=>{P[k]=(P[k]||0)+v};
+ if(m.dead){const e=eOut(Math.min(1,m.dt/.45));RIG.die(P,e);rot-=m.face*.85*e}
+ else if(m.stun>0){RIG.idle(P,T+m.bob,kind);RIG.hit(P,clamp(m.stun/(m.stunMax||.15),0,1))}
+ else if(m.lunge>0){RIG.idle(P,T+m.bob,kind);const p=1-m.lunge/.28;
+  if(kind==='brute'&&r.hasWA){/* 식칼을 머리 위로 들었다가 내려찍기 */const R=r.restWA;let g;if(p<.4)g=RL(R,-1.8,eInQ(p/.4));else if(p<.65)g=RL(-1.8,1.2,eOutX((p-.4)/.25));else g=R+(1.2-R)*springK((p-.65)/.35);RIG.weaponTo(P,r,'A',g,1,.3);ad('sp',p<.4?-.12*p/.4:.2*(p<.65?1:springK((p-.65)/.35)))}
+  else{/* 발톱: 양팔을 젖혔다가 앞으로 할퀴기 */
+   if(p<.38){const k=eInQ(p/.38);ad('aA',-.6*k);ad('fA',-.3*k);ad('aB',-.45*k);ad('fB',-.25*k);ad('sp',-.14*k)}
+   else{const k=eOutX(Math.min(1,(p-.38)/.22)),q=p>.6?springK((p-.6)/.4):1;ad('aA',RL(-.6,.55,k)*q);ad('fA',RL(-.3,.15,k)*q);ad('aB',RL(-.45,.45,k)*q);ad('fB',RL(-.25,.1,k)*q);ad('sp',RL(-.14,.24,k)*q)}}
+  if(kind==='flyer'||kind==='lord'){const f=Math.sin(p*Math.PI);ad('gL',-.35*f);ad('gR',.3*f)}}
+ else if(m.moving)RIG.run(P,T*9+m.bob,kind,kind==='flyer'?.55:1);
+ else RIG.idle(P,T+m.bob,kind);
+ return RIG.draw(cx,m,key,img,P,x,y,t.h,m.face,{rot,sy,a,f:m.dead?`brightness(${.6-m.dt*.5}) sepia(1) hue-rotate(-30deg)`:m.hitT>0?'brightness(2.6) saturate(.2)':null});
+}
 function drawHero(){const h=hero,C=CH(),img=ok(IMG[C.img])?IMG[C.img]:IMG[C.fb.replace('td-','')]||IMG.hero,HH=C.h,a=h.act;
  if(C.moon){const mx=h.x,my=h.y-HH*.75;cx.globalCompositeOperation='lighter';glow(mx,my,HH*.7,'rgba(255,30,50,A)',.26+Math.sin(T*2)*.06);cx.globalCompositeOperation='source-over'}
  if(C.g>=3){const gc=GR[C.g].c,n=parseInt(gc.slice(1),16);cx.globalCompositeOperation='lighter';glow(h.x,h.y-4,HH*.5,`rgba(${n>>16&255},${n>>8&255},${n&255},A)`,.12+C.g*.03+Math.sin(T*3)*.03);cx.globalCompositeOperation='source-over'}
@@ -999,13 +1070,15 @@ function drawHero(){const h=hero,C=CH(),img=ok(IMG[C.img])?IMG[C.img]:IMG[C.fb.r
  if(h.mv)rot+=.14*h.face,sx*=1.08,sy*=.94;
  if(h.recoil>0){const k=h.recoil/.3,e=k*k;x-=h.face*14*e;rot-=.09*h.face*e;sy*=1+.03*e}
  y-=h.yo;
+ const RD=window.RIG&&RIG.has(C.img)&&ok(img)&&RIG.ok()&&heroRig(img,C,h,a,x,y,HH,rot,sx,sy,smear);
+ if(!RD){
  /* 스미어(잔상 블러): 타격 순간 몸이 지나간 궤적에 색이 번지는 잔상 */
  if(smear>0&&!S.lowfx){cx.globalCompositeOperation='lighter';for(let i=3;i>=1;i--){const back=i*.11;drawBent(img,x-Math.cos(a?a.ang:0)*i*7*smear,y,HH,h.face,{rot:rot*(1-back),sy,sx:sx*(1+.03*i),bend:bend-HH*.11*smDir*i*smear,twist,a:.2*smear*(1-i*.22),f:`brightness(.9) sepia(1) saturate(8) hue-rotate(${C.hue}deg)`})}cx.globalCompositeOperation='source-over'}
  drawBent(img,x,y,HH,h.face,{rot,sy,sx,bend,twist,f:h.hitT>0?'brightness(1.8) saturate(.4)':null});
  if(h.flashT>0){cx.globalCompositeOperation='lighter';drawBent(img,x,y,HH,h.face,{rot,sy,sx,bend,twist,a:h.flashT/.08*.35,f:`brightness(1.6) sepia(1) saturate(5) hue-rotate(${C.hue}deg)`});cx.globalCompositeOperation='source-over'}
  if(smear>.6&&!S.lowfx){const[mx2,my2]=[x+Math.cos(a?a.ang:0)*HH*.42+bend*h.face*.8,y-HH*.62];cx.globalCompositeOperation='lighter';glow(mx2,my2,26+30*smear,'rgba(255,240,230,A)',.5*smear);cx.globalCompositeOperation='source-over'}
- if(buff.frenzy>0){cx.globalCompositeOperation='lighter';drawSprite(img,x,y,HH,h.face,{rot,sy,a:.16+Math.sin(T*14)*.05,f:'sepia(1) saturate(8) hue-rotate(-45deg) brightness(.9)'});cx.globalCompositeOperation='source-over'}
- if(C.id==='viper'){const[hx,hy]=handPos();const ch2=a&&a.k==='v'&&a.t<a.hits[0]?a.t/a.hits[0]:0;cx.globalCompositeOperation='lighter';glow(hx,hy-h.yo,22+ch2*30,'rgba(160,70,255,A)',.55+ch2*.4);glow(hx,hy-h.yo,8+ch2*10,'rgba(255,200,255,A)',.8);cx.globalCompositeOperation='source-over'}}
+ if(buff.frenzy>0){cx.globalCompositeOperation='lighter';drawSprite(img,x,y,HH,h.face,{rot,sy,a:.16+Math.sin(T*14)*.05,f:'sepia(1) saturate(8) hue-rotate(-45deg) brightness(.9)'});cx.globalCompositeOperation='source-over'}}
+ if(C.id==='viper'){const[hx,hy]=handPos();const ch2=a&&a.k==='v'&&a.t<a.hits[0]?a.t/a.hits[0]:0;cx.globalCompositeOperation='lighter';glow(hx,hy-(h._rigOn?0:h.yo),22+ch2*30,'rgba(160,70,255,A)',.55+ch2*.4);glow(hx,hy-(h._rigOn?0:h.yo),8+ch2*10,'rgba(255,200,255,A)',.8);cx.globalCompositeOperation='source-over'}}
 function drawMob(m){const t=MT[m.type],img=IMG[t.img];let x=m.x,y=m.y,rot=0,sy=1,a=m.spawn;
  if(t.fly)y-=34+Math.sin(T*4+m.bob)*8;
  if(m.boss)y-=16+Math.sin(T*1.6)*10;
@@ -1016,11 +1089,12 @@ function drawMob(m){const t=MT[m.type],img=IMG[t.img];let x=m.x,y=m.y,rot=0,sy=1
  else if(m.moving){y-=Math.abs(Math.sin(T*9+m.bob))*(t.fly?2:5);rot=Math.sin(T*9+m.bob)*.05}
  else sy=1+Math.sin(T*3+m.bob)*.015;
  if(m.spawn<1)sy*=.6+.4*m.spawn;
+ if(window.RIG&&ok(img)&&RIG.ok()&&mobRig(m,t,img,x,y,rot,sy,a))return;
  drawSprite(img,x,y,t.h,m.face,{rot,sy,a,f:m.dead?`brightness(${.6-m.dt*.5}) sepia(1) hue-rotate(-30deg)`:m.hitT>0?'brightness(2.6) saturate(.2)':null})}
 
 /* ========== 루프 ========== */
 let last=performance.now(),uiT=0,saveT=0;
-function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;if(hitStop>0){hitStop-=dt;dt*=hitStop>.2?.07:.015}update(dt);render();
+function loop(now){let dt=Math.min(.05,(now-last)/1000);last=now;if(hitStop>0){hitStop-=dt;dt*=hitStop>.2?.07:.015}update(dt);if(window.RIG)RIG.frame(dt,T);render();
  uiT+=dt;if(uiT>.2){uiT=0;hudSoft();tickSkills();$('#dpsT').textContent=fmt(heroDps()+famDps());$('#hpB').style.width=clamp(hero.hp/hero.max*100,0,100)+'%';$('#hpT').textContent=`${fmt(Math.max(0,Math.round(hero.hp)))}/${fmt(hero.max)}`;if(tab==='up'||tab==='fam')renderList(true);if(Math.random()<.25)checkQuest()}
  saveT+=dt;if(saveT>5){saveT=0;save()}
  requestAnimationFrame(loop)}
@@ -1032,6 +1106,7 @@ $('#fxBtn').classList.toggle('on',!S.lowfx);
 renderSkills();renderHud();renderList();offline();portUpd();{const C=CH(),ti=document.querySelector('#title .th');if(ti){ti.onerror=()=>{ti.onerror=null;ti.src=C.fb+'.webp'};ti.src=C.file+'.webp'}}
 for(let i=0;i<4;i++)spawnMob();
 requestAnimationFrame(loop);
+if(window.RIG){let wi=0;const warm=()=>{const ks=[[CH().img,IMG[CH().img]],['td-ghoul',IMG.ghoul],['td-gargoyle',IMG.gargoyle],['td-brute',IMG.brute],['td-boss',IMG.boss]];if(wi>=ks.length)return;const[k,im]=ks[wi];if(RIG.has(k)&&ok(im)){RIG.getRig(k,im);wi++}else if(!im||im.complete)wi++;setTimeout(warm,140)};setTimeout(warm,600)}
 </script>
 </body>
 </html>
