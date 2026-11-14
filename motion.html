@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>모션 미리보기 · 혈월의 사냥꾼</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#050203;overflow:hidden;color:#eadfd6;font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif}
+canvas{display:block;width:100vw;height:100vh}
+.top{position:fixed;left:0;right:0;top:0;padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px;pointer-events:none;background:linear-gradient(#050203ee,#05020300)}
+.top h1{font-size:18px;font-weight:800;letter-spacing:.02em;color:#f3e6dc}
+.top h1 b{color:#ff4058}
+.top p{font-size:13px;color:#b9a69a;margin-top:4px;max-width:560px;line-height:1.5}
+.top a{pointer-events:auto;font-size:13px;font-weight:700;color:#e8c27a;text-decoration:none;border:1px solid #6b4a2a;border-radius:999px;padding:8px 14px;white-space:nowrap;background:#1a0b08cc}
+.bar{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:10px;border-radius:18px;background:#120706e6;border:1px solid #3b1d16;box-shadow:0 20px 40px -20px #000;max-width:calc(100vw - 24px)}
+.bar .g{display:flex;gap:6px;align-items:center}
+.bar .g+.g{padding-left:8px;border-left:1px solid #3b1d16}
+.bar button{font:inherit;font-size:13.5px;font-weight:700;color:#d8c8bd;background:#1d0d0a;border:1px solid #3b1d16;border-radius:12px;padding:9px 13px;cursor:pointer;white-space:nowrap}
+.bar button.on{background:linear-gradient(#b3122a,#7a0a1c);border-color:#ff4058;color:#fff;box-shadow:0 0 18px -4px #ff1f3d}
+.bar .lb{font-size:12px;color:#8f7b70;font-weight:700;margin-right:2px}
+.tag{position:fixed;left:20px;bottom:calc(92px + env(safe-area-inset-bottom));font-size:12.5px;color:#a8958a;line-height:1.6;pointer-events:none}
+.tag b{color:#ff6074}
+@media(max-width:720px){.top p{display:none}.bar button{padding:8px 10px;font-size:12.5px}.tag{display:none}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="top">
+ <div><h1>혈월의 사냥꾼 · <b>뼈대 애니메이션</b> 미리보기</h1><p>그림은 그대로 두고, 그림 안에 뼈대를 심어 팔·다리·무기·망토를 따로 움직였어요. 무기는 따로 떼어내 크게 휘두르고, 날개·망토·촉수는 한 박자 늦게 따라와 휘날립니다.</p></div>
+ <a href="preview.html">게임에서 보기 →</a>
+</div>
+<div class="tag" id="tag"></div>
+<div class="bar">
+ <div class="g"><span class="lb">클래스</span><button data-c="blood" class="on">블러드스테인</button><button data-c="akasha">아카샤</button><button data-c="carnage">카니지</button><button data-c="viper">바이퍼</button></div>
+ <div class="g"><span class="lb">속도</span><button data-s="1" class="on">보통</button><button data-s=".35">느리게</button></div>
+</div>
+<script src="rig.js"></script>
+<script>
+(()=>{
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let W=0,H=0,DPR=1;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR}
+addEventListener('resize',resize);resize();
+const load=s=>{const i=new Image();i.src=s;return i};
+const okI=i=>i&&i.complete&&i.naturalWidth>0;
+const HEROES={blood:{key:'ap-blood-m-6',name:'블러드스테인',col:'#ff2a3c',h:300,reach:150},akasha:{key:'ap-akasha-f-6',name:'아카샤',col:'#ff3a6a',h:290,reach:135},carnage:{key:'ap-carnage-m-6',name:'카니지',col:'#ffb43a',h:300,reach:420},viper:{key:'ap-viper-m-6',name:'바이퍼',col:'#b46bff',h:305,reach:440}};
+const MOBS=[{key:'td-ghoul',name:'굶주린 구울',h:220,spd:150,hp:5},{key:'td-gargoyle',name:'혈맥 가고일',h:240,spd:170,hp:5,fly:1},{key:'td-brute',name:'살점 거인',h:300,spd:110,hp:7},{key:'td-boss',name:'혈월의 군주',h:470,spd:90,hp:10}];
+const IM={};for(const k in HEROES)IM[HEROES[k].key]=load(HEROES[k].key+'.webp');for(const m of MOBS)IM[m.key]=load(m.key+'.webp');
+const map=load('map1.webp');
+const COMBO={
+ blood:[{k:'b',st:0,dur:.42,hits:[.17]},{k:'b',st:1,dur:.42,hits:[.17]},{k:'b',st:2,dur:.82,hits:[.2,.34,.56]}],
+ akasha:[{k:'a',st:0,dur:.2,hits:[.07]},{k:'a',st:1,dur:.2,hits:[.07]},{k:'a',st:2,dur:.2,hits:[.07]},{k:'a',st:3,dur:.2,hits:[.07]},{k:'a',st:4,dur:.34,hits:[.13]}],
+ carnage:[{k:'c',dur:.16,hits:[0]},{k:'c',dur:.16,hits:[0]},{k:'c',dur:.16,hits:[0]},{k:'c',dur:.16,hits:[0]},{k:'c',dur:.36,hits:[0],snipe:1}],
+ viper:[{k:'v',dur:.5,hits:[.27]},{k:'v',dur:.5,hits:[.27]},{k:'v',dur:.6,hits:[.3]}]};
+let cls='blood',speed=1,T=0;
+const hero={x:0,y:0,face:1,t:0,state:'idle',act:null,ai:0,hitT:0,recoil:0,cool:.4,trail:[]};
+let mob=null,mobI=0,parts=[],nums=[],arcs=[],shots=[],cam={x:0},shake=0,flash=0;
+function spawn(){const d=MOBS[mobI%MOBS.length];mobI++;mob={d,key:d.key,x:hero.x+Math.max(560,W*.55),y:hero.y,face:-1,t:Math.random()*5,hp:d.hp,stun:0,stunMax:.18,lunge:0,dead:false,dt:0,moving:true,cool:1.2,kb:0}}
+function reset(){hero.x=0;hero.y=0;hero.act=null;hero.state='idle';parts=[];nums=[];arcs=[];shots=[];mobI=0;spawn();cam.x=hero.x+200}
+reset();
+document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{cls=b.dataset.c;document.querySelectorAll('[data-c]').forEach(x=>x.classList.toggle('on',x===b));reset()});
+document.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{speed=+b.dataset.s;document.querySelectorAll('[data-s]').forEach(x=>x.classList.toggle('on',x===b))});
+const rand=(a,b)=>a+Math.random()*(b-a);
+function hitMob(pow){if(!mob||mob.dead)return;mob.hp-=1;mob.stun=.18*(pow||1);mob.stunMax=mob.stun;mob.kb=(pow||1)*(mob.d.key==='td-boss'?60:200);shake=Math.max(shake,6*(pow||1));
+ const hx=mob.x,hy=mob.y-mob.d.h*.55;for(let i=0;i<14;i++){const a=rand(0,Math.PI*2),s=rand(80,360);parts.push({x:hx,y:hy,vx:Math.cos(a)*s+hero.face*120,vy:Math.sin(a)*s-120,t:0,life:rand(.35,.7),r:rand(3,7)})}
+ nums.push({x:hx+rand(-30,30),y:hy-20,t:0,v:Math.round(rand(800,2400)*(pow||1)),c:pow>1.3?'#ffd36a':'#fff'});
+ if(mob.hp<=0){mob.dead=true;mob.dt=0;flash=.12}}
+function update(dt){T+=dt;hero.t+=dt;if(hero.hitT>0)hero.hitT-=dt;if(hero.recoil>0)hero.recoil-=dt;shake=Math.max(0,shake-dt*30);flash=Math.max(0,flash-dt);
+ const C=HEROES[cls];
+ if(mob){mob.t+=dt;if(mob.dead){mob.dt+=dt;if(mob.dt>1.1){spawn()}}
+  else{if(mob.stun>0)mob.stun-=dt;if(mob.lunge>0)mob.lunge-=dt;if(mob.kb>0){mob.x+=mob.kb*dt;mob.kb=Math.max(0,mob.kb-dt*900)}
+   const d=mob.x-hero.x,reachM=mob.d.h*.42+60;mob.face=d>0?-1:1;
+   mob.moving=Math.abs(d)>reachM&&mob.stun<=0&&mob.lunge<=0;
+   if(mob.moving)mob.x-=Math.sign(d)*mob.d.spd*dt;
+   mob.cool-=dt;if(!mob.moving&&mob.stun<=0&&mob.lunge<=0&&mob.cool<=0&&Math.abs(d)<reachM+30){mob.lunge=.28;mob.cool=rand(1.6,2.6);setTimeout(()=>{if(mob&&!mob.dead&&Math.abs(mob.x-hero.x)<reachM+60){hero.hitT=.15;shake=Math.max(shake,4)}},140/speed)}}}
+ const a=hero.act;
+ if(a){const prev=a.t;a.t+=dt;
+  for(let i=0;i<a.hits.length;i++){const ht=a.hits[i];if(prev<ht&&a.t>=ht){
+   if(a.k==='c'){hero.recoil=a.snipe?.3:.2;const tp=hero._tipA||[hero.x+120,hero.y-200];shots.push({x1:tp[0],y1:tp[1],x2:mob?mob.x:tp[0]+600,y2:mob?mob.y-mob.d.h*.5:tp[1],t:0,life:.12,w:a.snipe?9:5});hitMob(a.snipe?1.6:.8)}
+   else if(a.k==='v'){const tp=hero._tipA||[hero.x+120,hero.y-220];shots.push({orb:1,x1:tp[0],y1:tp[1],x2:mob?mob.x:tp[0]+500,y2:mob?mob.y-mob.d.h*.5:tp[1],t:0,life:.28});setTimeout(()=>hitMob(1.2),260/speed)}
+   else hitMob(a.k==='b'&&a.st===2&&i===2?1.8:a.k==='a'&&a.st===4?1.5:1)}}
+  if(a.k==='b'&&a.st<2&&a.t<a.hits[0])hero.x+=hero.face*120*dt;
+  if(a.k==='a'&&a.t<a.hits[0])hero.x+=hero.face*140*dt;
+  if(a.k==='b'&&a.st===2&&a.t>a.hits[1]+.12&&a.t<a.hits[2])hero.x+=hero.face*90*dt;
+  if(a.t>=a.dur){hero.act=null;hero.cool=a.k==='c'?.06:.08}}
+ else{
+  if(!mob||mob.dead){hero.state='idle'}
+  else{const d=mob.x-hero.x;hero.face=d>0?1:-1;
+   if(Math.abs(d)>C.reach+mob.d.h*.18){hero.state='run';hero.x+=hero.face*420*dt}
+   else{hero.state='fight';hero.cool-=dt;if(hero.cool<=0){const L=COMBO[cls];const o=L[hero.ai%L.length];hero.ai++;hero.act={...o,hits:[...o.hits],t:0,ang:0,tg:mob};if(hero.ai%L.length===0)hero.cool=.35}}}}
+ const want=hero.x+(mob&&!mob.dead?Math.min(260,Math.max(80,(mob.x-hero.x)*.5)):120);cam.x+=(want-cam.x)*Math.min(1,dt*3);
+ for(const p of parts){p.t+=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=900*dt}parts=parts.filter(p=>p.t<p.life);
+ for(const n of nums){n.t+=dt;n.y-=60*dt}nums=nums.filter(n=>n.t<.9);
+ for(const s of shots)s.t+=dt;shots=shots.filter(s=>s.t<s.life);
+ if(hero._tipA&&hero.act&&hero.act.k!=='c'&&hero.act.k!=='v'){hero.trail.push({x:hero._tipA[0],y:hero._tipA[1],t:0});if(hero._tipB)hero.trail.push({x:hero._tipB[0],y:hero._tipB[1],t:0,b:1})}
+ for(const q of hero.trail)q.t+=dt;hero.trail=hero.trail.filter(q=>q.t<.12);
+}
+function ground(){const sc=Math.max(W,H)/1100*1.5;if(okI(map)){const tw=map.naturalWidth*sc*.55,th=map.naturalHeight*sc*.55;const ox=-((cam.x*.9)%tw+tw)%tw;cx.globalAlpha=.9;for(let x=ox-tw;x<W+tw;x+=tw)for(let y=-th*.3;y<H;y+=th)cx.drawImage(map,x,y,tw,th);cx.globalAlpha=1}
+ const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'rgba(5,2,3,.85)');g.addColorStop(.45,'rgba(5,2,3,.25)');g.addColorStop(1,'rgba(5,2,3,.75)');cx.fillStyle=g;cx.fillRect(0,0,W,H);
+ const v=cx.createRadialGradient(W/2,H*.62,H*.15,W/2,H*.62,Math.max(W,H)*.8);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.75)');cx.fillStyle=v;cx.fillRect(0,0,W,H)}
+function shadowAt(x,y,r,a){cx.save();cx.translate(x,y);cx.scale(1,.3);const g=cx.createRadialGradient(0,0,0,0,0,r);g.addColorStop(0,`rgba(0,0,0,${a})`);g.addColorStop(1,'rgba(0,0,0,0)');cx.fillStyle=g;cx.beginPath();cx.arc(0,0,r,0,7);cx.fill();cx.restore()}
+function render(){
+ cx.setTransform(DPR,0,0,DPR,0,0);ground();
+ const z=Math.min(1.25,Math.max(.55,Math.min(W/1400,H/860)*1.05)),sx=(shake?rand(-shake,shake):0);
+ const gy=H*.8;
+ cx.setTransform(DPR*z,0,0,DPR*z,DPR*(W/2-cam.x*z+sx),DPR*gy);
+ const C=HEROES[cls];
+ if(mob)shadowAt(mob.x,mob.y,mob.d.h*.33,mob.dead?.5*(1-mob.dt):.6);
+ shadowAt(hero.x,hero.y,C.h*.26,.65);
+ /* 몬스터 */
+ if(mob&&okI(IM[mob.key])){const o=RIG.mobPose(RIG.getRig(mob.key,IM[mob.key]),{dead:mob.dead,dt:mob.dt,stun:mob.stun,stunMax:mob.stunMax,lunge:mob.lunge,moving:mob.moving,t:mob.t});
+  let y=mob.y,x=mob.x,a=1;if(mob.d.fly)y-=40+Math.sin(T*4)*10;if(mob.lunge>0){const p=1-mob.lunge/.28;x+=mob.face*Math.sin(p*Math.PI)*34}if(mob.dead){a=Math.max(0,1-mob.dt/1.05);y+=mob.dt*14}
+  RIG.draw(cx,mob,mob.key,IM[mob.key],o.P,x,y,mob.d.h,mob.face,{rot:o.rot*mob.face,a,f:mob.dead?`brightness(${Math.max(.15,.6-mob.dt*.5)}) sepia(1) hue-rotate(-30deg)`:mob.stun>0?'brightness(2.2) saturate(.3)':null})}
+ /* 칼끝 궤적 */
+ if(hero.trail.length>2){cx.globalCompositeOperation='lighter';for(const B of[0,1]){const L=hero.trail.filter(q=>!!q.b===!!B);for(let i=1;i<L.length;i++){const p=L[i-1],q=L[i],k=1-q.t/.12;cx.strokeStyle=C.col;cx.globalAlpha=.55*k;cx.lineWidth=18*k+2;cx.lineCap='round';cx.beginPath();cx.moveTo(p.x,p.y);cx.lineTo(q.x,q.y);cx.stroke();cx.strokeStyle='#fff';cx.globalAlpha=.7*k;cx.lineWidth=4*k+1;cx.stroke()}}cx.globalAlpha=1;cx.globalCompositeOperation='source-over'}
+ /* 영웅 */
+ const img=IM[C.key];
+ if(okI(img)){const r=RIG.getRig(C.key,img);let aim=null;if(cls==='carnage'&&mob&&!mob.dead){aim=Math.max(-.7,Math.min(.75,Math.atan2((mob.y-mob.d.h*.5)-(hero.y-C.h*.7),Math.max(30,(mob.x-hero.x)*hero.face))))}
+  const P=RIG.heroPose(r,{act:hero.act,state:hero.state==='run'?'run':'idle',t:hero.t,hitT:hero.hitT,recoil:hero.recoil,aim});
+  let x=hero.x,y=hero.y,rot=0,sxv=1,syv=1;const a=hero.act;
+  if(a&&a.k==='b'&&a.st===2){const t1=a.hits[1]+.12,t2=a.hits[2];if(a.t<t1){const q=a.t/t1,spn=q*Math.PI*3;sxv=Math.cos(spn);if(Math.abs(sxv)<.22)sxv=.22*Math.sign(sxv||1)}else if(a.t<t2){const q=(a.t-t1)/(t2-t1);y-=q<.6?Math.sin(q/.6*Math.PI/2)*90:90*(1-(q-.6)/.4)}else{const k=(a.t-t2)/(a.dur-t2),e=1-k;syv=1-.14*e*e;sxv=1+.1*e*e}}
+  if(a&&a.k==='a'&&a.st===4)y-=Math.sin(Math.min(1,a.t/a.dur)*Math.PI)*60;
+  if(hero.recoil>0&&cls==='carnage'){const k=hero.recoil/.3;x-=hero.face*16*k*k}
+  RIG.draw(cx,hero,C.key,img,P,x,y,C.h,hero.face,{rot,sx:sxv,sy:syv,f:hero.hitT>0?'brightness(1.8) saturate(.4)':null})}
+ /* 탄·오브 */
+ cx.globalCompositeOperation='lighter';
+ for(const s of shots){const k=s.t/s.life;if(s.orb){const x=s.x1+(s.x2-s.x1)*k,y=s.y1+(s.y2-s.y1)*k-Math.sin(k*Math.PI)*40;const g=cx.createRadialGradient(x,y,0,x,y,34);g.addColorStop(0,'rgba(255,220,255,.95)');g.addColorStop(.4,'rgba(180,90,255,.7)');g.addColorStop(1,'rgba(120,40,255,0)');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,34,0,7);cx.fill()}
+  else{cx.strokeStyle='rgba(255,210,120,'+(1-k)+')';cx.lineWidth=s.w*(1-k)+1;cx.beginPath();cx.moveTo(s.x1,s.y1);cx.lineTo(s.x2,s.y2);cx.stroke();const g=cx.createRadialGradient(s.x1,s.y1,0,s.x1,s.y1,40);g.addColorStop(0,'rgba(255,240,200,'+(1-k)+')');g.addColorStop(1,'rgba(255,140,40,0)');cx.fillStyle=g;cx.beginPath();cx.arc(s.x1,s.y1,40,0,7);cx.fill()}}
+ if(cls==='viper'&&hero._tipA){const ch=hero.act&&hero.act.k==='v'&&hero.act.t<hero.act.hits[0]?hero.act.t/hero.act.hits[0]:0;const[x,y]=hero._tipA;const g=cx.createRadialGradient(x,y,0,x,y,26+ch*36);g.addColorStop(0,'rgba(255,210,255,.9)');g.addColorStop(.5,'rgba(170,80,255,.45)');g.addColorStop(1,'rgba(120,40,255,0)');cx.fillStyle=g;cx.beginPath();cx.arc(x,y,26+ch*36,0,7);cx.fill()}
+ cx.globalCompositeOperation='source-over';
+ for(const p of parts){const k=1-p.t/p.life;cx.fillStyle=`rgba(${150+Math.random()*60|0},0,12,${k})`;cx.beginPath();cx.arc(p.x,p.y,p.r*k+1,0,7);cx.fill()}
+ cx.textAlign='center';for(const n of nums){const k=n.t/.9;cx.globalAlpha=1-k*k;cx.font=`900 ${40+(n.c!=='#fff'?14:0)}px Pretendard,sans-serif`;cx.lineWidth=6;cx.strokeStyle='rgba(40,0,6,.9)';cx.strokeText(n.v.toLocaleString(),n.x,n.y);cx.fillStyle=n.c;cx.fillText(n.v.toLocaleString(),n.x,n.y)}cx.globalAlpha=1;
+ if(flash>0){cx.setTransform(1,0,0,1,0,0);cx.fillStyle=`rgba(255,40,60,${flash})`;cx.fillRect(0,0,cv.width,cv.height)}
+}
+const tag=document.getElementById('tag');
+let last=performance.now(),tagT=0;
+function loop(now){const dt=Math.min(.05,(now-last)/1000)*speed;last=now;update(dt);RIG.frame(dt,T);render();
+ tagT-=dt;if(tagT<=0){tagT=.25;const a=hero.act;const C=HEROES[cls];tag.innerHTML=`<b>${C.name}</b> · ${a?'공격 '+(a.k==='b'?['내려베기','올려베기','회전 후 내려찍기'][a.st]:a.k==='a'?(a.st<4?'칼날 연격 '+(a.st+1):'올려치기'):a.k==='c'?(a.snipe?'저격':'사격'):'저주 시전'):hero.state==='run'?'달리기':'대기'}<br>상대 · ${mob?mob.d.name:''}`}
+ requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

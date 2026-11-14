@@ -299,5 +299,66 @@ function weaponTo(P,r,chain,abs,k,share){
  add(P,armN,d*sh);add(P,wN,d*(1-sh));
 }
 
-window.RIG={DEF,has:k=>k in DEF,getRig,draw,blit,frame,idle,run,hit,die,weaponTo,wrap,ok:()=>initGL()};
+/* ---------- 동작 → 포즈 (게임과 모션 미리보기 페이지가 같이 씀) ---------- */
+const clamp=(v,a,b)=>v<a?a:v>b?b:v,eInQ=q=>q*q*q,eOutX=q=>q>=1?1:1-Math.pow(2,-10*q),springK=k=>Math.exp(-5.5*k)*Math.cos(10*k),eOut=q=>1-(1-q)*(1-q),RL=(a,b,t)=>a+(b-a)*t;
+/* s = {act:{k,st,t,dur,hits}, state:'run'|..., t, hitT, recoil, aim} */
+function heroPose(r,s){
+ const kind=r.kind,P={},ad=(k,v)=>{P[k]=(P[k]||0)+v},RA=r.restWA,RB=r.restWB,a=s.act,t=s.t||0;
+ const TW=(g,k,sh)=>{if(r.hasWA)weaponTo(P,r,'A',g,k==null?1:k,sh==null?.22:sh)},TB=(g,k,sh)=>{if(r.hasWB)weaponTo(P,r,'B',g,k==null?1:k,sh==null?.25:sh)};
+ if(a){const p=clamp(a.t/a.dur,0,1),hp=clamp(((a.hits&&a.hits[0])||0)/a.dur,.05,.95);
+  if(a.k==='b'&&a.st<2){idle(P,t,kind);
+   /* 대검: 머리 뒤로 들어 올림 → 앞아래로 내려벰 → 스프링으로 정지 (역방향 베기는 거꾸로) */
+   const sg=a.st===0?1:-1,w1=hp*.62,W=sg>0?-2.15:1.75,K=sg>0?1.05:-1.9;let g,sp,lg;
+   if(p<w1){const k=eInQ(p/w1);g=RL(RA,W,k);sp=(sg>0?-.15:.1)*k;lg=-.06*k}
+   else if(p<hp){const k=eOutX((p-w1)/(hp-w1));g=RL(W,K,k);sp=RL(sg>0?-.15:.1,sg>0?.22:-.14,k);lg=RL(-.06,-.34,k)}
+   else{const k=(p-hp)/(1-hp),q=springK(k);g=RA+(K-RA)*q;sp=(sg>0?.22:-.14)*q;lg=-.34*q}
+   TW(g,1,.22);ad('sp',sp);ad('hd',-sp*.45);ad('tR',lg);ad('sR',-lg*.5);ad('tL',-lg*.35);ad('aB',(P.aA||0)*.6)}
+  else if(a.k==='b'){const t1=a.hits[1]+.12,t2=a.hits[2];
+   if(a.t<t1){idle(P,t,kind);TW(.05,Math.min(1,a.t/.08),.3);ad('sp',.08);ad('sL',.25);ad('sR',.25);ad('tL',.1);ad('tR',-.12)}
+   else if(a.t<t2){const q=(a.t-t1)/(t2-t1);
+    if(q<.6){const e=eOutX(q/.6);TW(RL(.05,-2.3,e),1,.25);ad('sp',-.2*e);ad('hd',-.1*e);ad('tL',-.35*e);ad('sL',.75*e);ad('tR',-.15*e);ad('sR',.6*e)}
+    else{const e=eOutX((q-.6)/.4);TW(RL(-2.3,1.25,e),1,.28);ad('sp',RL(-.2,.32,e));ad('hd',RL(-.1,.1,e));ad('tL',-.35*(1-e));ad('sL',.75*(1-e));ad('tR',-.15*(1-e)-.2*e);ad('sR',.6*(1-e)+.2*e)}}
+   else{const k=clamp((a.t-t2)/(a.dur-t2),0,1),e=1-k,q=springK(k);TW(RA+(1.25-RA)*q,1,.28);ad('sp',.32*q);ad('sL',.55*e*e);ad('sR',.55*e*e);ad('tL',-.18*e);ad('tR',-.26*e)}}
+  else if(a.k==='dash'){run(P,Math.PI*.5,kind,1.2);ad('sp',.16);TW(2.45,1,.2);TB(2.7,1,.2)}
+  else if(a.k==='a'){idle(P,t,kind);
+   if(a.st<4){/* 톤파 칼날: 좌우 번갈아 크게 벰 */
+    const sg=a.st%2?-1:1,useB=sg<0&&r.hasWB,w1=hp*.5,R=useB?RB:RA,W=useB?2.95:-1.25,K=useB?.2:1.35;let g,sp,lg;
+    if(p<w1){const k=eInQ(p/w1);g=RL(R,W,k);sp=-.12*k;lg=-.05*k}
+    else if(p<hp){const k=eOutX((p-w1)/(hp-w1));g=RL(W,K,k);sp=RL(-.12,.22,k);lg=RL(-.05,-.28,k)}
+    else{const k=(p-hp)/(1-hp),q=springK(k);g=R+(K-R)*q;sp=.22*q;lg=-.28*q}
+    if(useB)TB(g,1,.28);else TW(g,1,.28);ad('sp',sp);ad('hd',-sp*.4);if(sg>0){ad('tR',lg);ad('sR',-lg*.4)}else{ad('tL',lg);ad('sL',-lg*.4)}}
+   else{const e=Math.sin(p*Math.PI),k=eOutX(Math.min(1,p/hp));TW(RL(RA,-1.75,k),1,.3);TB(RL(RB,-2,k),1,.3);ad('sp',-.22*e);ad('hd',-.12*e);ad('tL',-.3*e);ad('sL',.6*e);ad('tR',-.12*e);ad('sR',.5*e)}}
+  else if(a.k==='chain'){run(P,Math.PI*.5,kind,1.1);ad('sp',.2);TW(.1,1,.3);TB(3,1,.3)}
+  else if(a.k==='spin'){idle(P,t,kind);TW(0,1,.35);TB(Math.PI,1,.35);ad('sL',.2);ad('sR',.2)}
+  else if(a.k==='hop'){idle(P,t,kind);const e=Math.sin(p*Math.PI);ad('tL',-.4*e);ad('sL',.8*e);ad('tR',-.22*e);ad('sR',.7*e);ad('sp',-.16*e);ad('hd',-.08*e)}
+  else if(a.k==='v'){idle(P,t,kind);const t0=a.hits[0];
+   /* 바이퍼: 두 손을 끌어올려 모았다가 앞으로 내지름 */
+   if(a.t<t0){const k=eInQ(a.t/t0);ad('aA',-.55*k);ad('fA',-.25*k);ad('aB',-.42*k);ad('fB',-.3*k);ad('sp',-.1*k);ad('hd',-.07*k)}
+   else{const q=clamp((a.t-t0)/(a.dur-t0),0,1),th=eOutX(Math.min(1,q/.22)),fd=1-q*q*(3-2*q);ad('aA',RL(-.55,.3,th)*fd);ad('fA',RL(-.25,.08,th)*fd);ad('aB',RL(-.42,.22,th)*fd);ad('fB',RL(-.3,-.05,th)*fd);ad('sp',RL(-.1,.17,th)*fd);ad('hd',RL(-.07,.05,th)*fd)}}
+  else idle(P,t,kind);
+ } else if(s.state==='run')run(P,t*12,kind,1);
+ else idle(P,t,kind);
+ /* 카니지: 총구가 표적을 겨누고, 쏠 때 팔이 튀어 오름 */
+ if(kind==='gun'){if(s.aim!=null)TW(s.aim,a?1:.5,.75);
+  if(s.recoil>0){const k=Math.pow(s.recoil/.3,2);ad('aA',-.3*k);ad('wA',-.12*k);ad('sp',-.1*k);ad('hd',-.06*k)}}
+ if(s.hitT>0)hit(P,clamp(s.hitT/.15,0,1));
+ return P;
+}
+/* s = {dead, dt, stun, stunMax, lunge, moving, t} → {P, rot} (rot는 face를 곱해서 쓰기) */
+function mobPose(r,s){
+ const P={},kind=r.kind,ad=(k,v)=>{P[k]=(P[k]||0)+v},t=s.t||0;let rot=0;
+ if(s.dead){const e=eOut(Math.min(1,s.dt/.45));die(P,e);rot=-.85*e}
+ else if(s.stun>0){idle(P,t,kind);hit(P,clamp(s.stun/(s.stunMax||.15),0,1))}
+ else if(s.lunge>0){idle(P,t,kind);const p=1-s.lunge/.28;
+  if(kind==='brute'&&r.hasWA){/* 식칼을 머리 위로 들었다가 내려찍기 */const R=r.restWA;let g;if(p<.4)g=RL(R,-1.8,eInQ(p/.4));else if(p<.65)g=RL(-1.8,1.2,eOutX((p-.4)/.25));else g=R+(1.2-R)*springK((p-.65)/.35);weaponTo(P,r,'A',g,1,.3);ad('sp',p<.4?-.12*p/.4:.2*(p<.65?1:springK((p-.65)/.35)))}
+  else{/* 발톱: 양팔을 젖혔다가 앞으로 할퀴기 */
+   if(p<.38){const k=eInQ(p/.38);ad('aA',-.6*k);ad('fA',-.3*k);ad('aB',-.45*k);ad('fB',-.25*k);ad('sp',-.14*k)}
+   else{const k=eOutX(Math.min(1,(p-.38)/.22)),q=p>.6?springK((p-.6)/.4):1;ad('aA',RL(-.6,.55,k)*q);ad('fA',RL(-.3,.15,k)*q);ad('aB',RL(-.45,.45,k)*q);ad('fB',RL(-.25,.1,k)*q);ad('sp',RL(-.14,.24,k)*q)}}
+  if(kind==='flyer'||kind==='lord'){const f=Math.sin(p*Math.PI);ad('gL',-.35*f);ad('gR',.3*f)}}
+ else if(s.moving)run(P,t*9,kind,kind==='flyer'?.55:1);
+ else idle(P,t,kind);
+ return{P,rot};
+}
+
+window.RIG={DEF,has:k=>k in DEF,getRig,draw,blit,frame,idle,run,hit,die,weaponTo,wrap,heroPose,mobPose,ok:()=>initGL()};
 })();
